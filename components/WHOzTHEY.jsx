@@ -105,16 +105,6 @@ async function fetchClarification(claim) {
   return res.json();
 }
 
-If the claim is already clear and unambiguous, set needsClarification to false and return empty versions array.
-Always look for the funny literal interpretation when possible — that's what makes this fun.`,
-      messages:[{ role:"user", content:`Analyze this claim for semantic ambiguity: "${claim}"` }],
-    }),
-  });
-  const data = await res.json();
-  const raw = data.content?.[0]?.text || "{}";
-  return JSON.parse(raw.replace(/```json|```/g,"").trim());
-}
-
 async function fetchAnswer(claim) {
   // SECURE: API key lives on the server in /api/search — never in the browser
   const res = await fetch("/api/search", {
@@ -124,13 +114,6 @@ async function fetchAnswer(claim) {
   });
   if (!res.ok) throw new Error("Search failed");
   return res.json();
-}`,
-      messages:[{ role:"user", content:`Research this claim: "${claim}"` }],
-    }),
-  });
-  const data = await res.json();
-  const raw = data.content?.[0]?.text || "{}";
-  return JSON.parse(raw.replace(/```json|```/g,"").trim());
 }
 
 const VERDICT_MAP = {
