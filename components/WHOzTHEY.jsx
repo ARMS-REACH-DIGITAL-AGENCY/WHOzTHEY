@@ -4,13 +4,14 @@ import { useState, useEffect, useRef } from "react";
 
 // ── BRAND ─────────────────────────────────────────────────────────────────────
 function Wordmark({ size=32 }) {
-  const s = { fontFamily:"'Georgia',serif", fontSize:`${size}px`, fontWeight:"700", letterSpacing:"-0.5px", lineHeight:1 };
+  // Official logo — fingerprint magnifying glass speech bubble
+  const h = size * 2.8;
   return (
-    <span style={{ display:"inline-flex", alignItems:"baseline" }}>
-      <span style={{ ...s, color:"#f8fafc" }}>WHO</span>
-      <span style={{ ...s, color:"#dc2626", position:"relative", top:`-${size*0.28}px` }}>Z</span>
-      <span style={{ ...s, color:"#f8fafc" }}>THEY?</span>
-    </span>
+    <img
+      src="/logo.png"
+      alt="WHOzTHEY?"
+      style={{ height:`${h}px`, width:"auto", display:"block", maxWidth:"280px" }}
+    />
   );
 }
 function BrandLabel({ light=false, size="inherit" }) {
@@ -195,11 +196,18 @@ async function fetchAnswer(claim) {
 }
 
 const VERDICT_MAP = {
-  TRUE:             { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", label:"✓ TRUE" },
-  FALSE:            { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"✗ FALSE" },
-  "PARTIALLY TRUE": { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", label:"◐ PARTIALLY TRUE" },
-  MYTH:             { bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", label:"◌ MYTH" },
-  DISPUTED:         { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", label:"? DISPUTED" },
+  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", label:"📍 Origin Traced" },
+  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", label:"⚖️ Both Sides Valid" },
+  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", label:"🏡 Traditional Wisdom" },
+  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", label:"🏛 Institutionally Pushed" },
+  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", label:"🤷 Genuinely Disputed" },
+  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
+  // fallbacks for old verdicts
+  TRUE:             { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", label:"📍 Origin Traced" },
+  FALSE:            { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
+  "PARTIALLY TRUE": { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", label:"⚖️ Both Sides Valid" },
+  MYTH:             { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
+  DISPUTED:         { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", label:"🤷 Genuinely Disputed" },
 };
 
 // ── THEY SAID WHAT? ───────────────────────────────────────────────────────────
@@ -519,20 +527,53 @@ function AnswerPanel({ query, answer, onClear, persona, onBadgeEarned, user, onL
         </div>
       </div>
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px" }}>
-        {[
-          { label:"WHOzTHEY?", content:answer.whoIsThey, accent:true },
-          { label:"Origin", content:answer.origin },
-          { label:"What the research actually says", content:answer.research, highlight:true },
-          { label:"How it spread", content:answer.culturalSpread },
-        ].map(({ label, content, accent, highlight })=>(
-          <div key={label} style={{ marginBottom:"22px", ...(highlight?{ background:"#f8fafc", borderRadius:"8px", padding:"16px 20px", borderLeft:"3px solid #dc2626" }:{}) }}>
-            <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:accent?"#dc2626":"#64748b", margin:"0 0 8px" }}>{label}</h3>
-            <p style={{ fontFamily:"system-ui", fontSize:accent?"15px":"14px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:accent?"500":"400" }}>{content}</p>
+        {/* WHO is "they" */}
+        <div style={{ marginBottom:"20px" }}>
+          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
+          <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
+        </div>
+        <div style={{ marginBottom:"20px" }}>
+          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
+          <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
+        </div>
+
+        {/* Two sides of the hand */}
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
+          <div style={{ background:"#f0f9ff", border:"1px solid #7dd3fc", borderRadius:"8px", padding:"14px 16px" }}>
+            <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#0284c7", margin:"0 0 6px" }}>👁 From This Side</h3>
+            <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.traditionalView}</p>
           </div>
-        ))}
-        <div style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px", marginBottom:"22px" }}>
+          <div style={{ background:"#f8fafc", border:"1px solid #cbd5e1", borderRadius:"8px", padding:"14px 16px" }}>
+            <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#475569", margin:"0 0 6px" }}>👁 From The Other Side</h3>
+            <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.modernView}</p>
+          </div>
+        </div>
+
+        {/* Where they meet */}
+        {answer.commonGround && (
+          <div style={{ background:"#f0fdf4", border:"1px solid #86efac", borderRadius:"8px", padding:"14px 16px", marginBottom:"20px" }}>
+            <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#16a34a", margin:"0 0 6px" }}>🤝 Where Both Sides Agree</h3>
+            <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#14532d", lineHeight:"1.65", margin:0 }}>{answer.commonGround}</p>
+          </div>
+        )}
+
+        {/* Cultural spread */}
+        <div style={{ background:"#f8fafc", borderRadius:"8px", padding:"16px 20px", borderLeft:"3px solid #dc2626", marginBottom:"20px" }}>
+          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Spread</h3>
+          <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.culturalSpread}</p>
+        </div>
+
+        {/* Fun fact */}
+        <div style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px", marginBottom:"20px" }}>
           <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706", margin:"0 0 6px" }}>★ They Also Say…</h3>
           <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#92400e", lineHeight:"1.7", margin:0 }}>{answer.funFact}</p>
+        </div>
+
+        {/* Cronkite sign-off */}
+        <div style={{ textAlign:"center", padding:"16px 0 4px", borderTop:"1px solid #f1f5f9" }}>
+          <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", color:"#94a3b8", fontStyle:"italic", margin:0 }}>
+            "WHOzTHEY? doesn't tell you what to think. We just find out who said it first."
+          </p>
         </div>
         {answer.sources?.length>0 && (
           <div style={{ marginBottom:"20px" }}>
@@ -562,8 +603,19 @@ function FunFactsSection({ onSearch, onBadgeEarned }) {
   const [current, setCurrent] = useState(0);
   const [factAnswer, setFactAnswer] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [paused, setPaused] = useState(false);
   const item = CAROUSEL_ITEMS[current];
   const total = CAROUSEL_ITEMS.length;
+
+  // Auto-rotate every 3 seconds unless paused (user interacting)
+  useEffect(() => {
+    if (paused || loading) return;
+    const t = setInterval(() => {
+      setFactAnswer(null);
+      setCurrent(c => (c + 1) % total);
+    }, 3000);
+    return () => clearInterval(t);
+  }, [paused, loading, total]);
 
   async function reveal() {
     if (item.isSponsor) return;
@@ -572,7 +624,7 @@ function FunFactsSection({ onSearch, onBadgeEarned }) {
     catch { setFactAnswer({ verdict:"DISPUTED", whoIsThey:"We couldn't retrieve that right now.", sources:[] }); }
     finally { setLoading(false); }
   }
-  function goTo(i) { setCurrent(i); setFactAnswer(null); }
+  function goTo(i) { setCurrent(i); setFactAnswer(null); setPaused(true); setTimeout(()=>setPaused(false), 8000); }
   function prev() { goTo((current-1+total)%total); }
   function next() { goTo((current+1)%total); }
 
@@ -662,6 +714,79 @@ function FunFactsSection({ onSearch, onBadgeEarned }) {
 
 // ── MARKETPLACE TAB ───────────────────────────────────────────────────────────
 function Marketplace() {
+  return (
+    <div style={{ minHeight:"60vh", padding:"32px 20px", textAlign:"center" }}>
+      <div style={{ maxWidth:"600px", margin:"0 auto" }}>
+
+        {/* Logo */}
+        <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"120px", width:"auto", margin:"0 auto 20px", display:"block" }} />
+
+        <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"26px", fontWeight:"700", color:"#0f172a", margin:"0 0 10px" }}>
+          Hello, I'm <span style={{ color:"#dc2626" }}>THEY.</span>
+        </h2>
+        <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#64748b", lineHeight:"1.7", margin:"0 0 24px" }}>
+          Wear your title. Start the argument. Settle it with style.<br/>
+          T-shirts, hoodies, hats, mugs, bags, polos and more —<br/>
+          all branded with the WHOzTHEY? you know and love.
+        </p>
+
+        {/* Featured products preview */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"10px", marginBottom:"28px" }}>
+          {[
+            { label:"T-Shirts", emoji:"👕", price:"From $17.95" },
+            { label:"Hoodies", emoji:"🧥", price:"From $33.95" },
+            { label:"Hats", emoji:"🧢", price:"From $24.95" },
+            { label:"Mugs", emoji:"☕", price:"From $16.95" },
+            { label:"Bags", emoji:"👜", price:"From $50.95" },
+            { label:"& More", emoji:"🎁", price:"Kids, Polos..." },
+          ].map(p=>(
+            <div key={p.label} style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"12px 8px" }}>
+              <div style={{ fontSize:"24px", marginBottom:"4px" }}>{p.emoji}</div>
+              <div style={{ fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", color:"#0f172a" }}>{p.label}</div>
+              <div style={{ fontFamily:"system-ui", fontSize:"10px", color:"#64748b" }}>{p.price}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Big CTA */}
+        <a
+          href="https://asbshops.com/@b70491"
+          target="_blank"
+          rel="noopener"
+          style={{
+            display:"inline-block", width:"100%", padding:"18px",
+            background:"#dc2626", borderRadius:"10px", boxSizing:"border-box",
+            fontFamily:"'Georgia',serif", fontSize:"18px", fontWeight:"700",
+            color:"#fff", textDecoration:"none", marginBottom:"14px",
+          }}
+        >
+          🛒 Shop the WHOzTHEY? Store →
+        </a>
+
+        <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8" }}>
+          Powered by ASB · American Solutions for Business<br/>
+          Fast 1–2 day printing · Direct shipping · No minimum order
+        </p>
+
+        {/* Gag gift callout */}
+        <div style={{ background:"#fef2f2", border:"1px solid #fca5a5", borderRadius:"8px", padding:"16px", marginTop:"24px" }}>
+          <p style={{ fontFamily:"'Georgia',serif", fontSize:"15px", color:"#0f172a", margin:"0 0 4px" }}>
+            Looking for the perfect gag gift?
+          </p>
+          <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#64748b", margin:"0 0 12px" }}>
+            The "Hello, I'm THEY" name badge is the ultimate gift for every know-it-all in your life.
+          </p>
+          <a href="https://asbshops.com/@b70491" target="_blank" rel="noopener" style={{ fontFamily:"system-ui", fontSize:"13px", fontWeight:"700", color:"#dc2626", textDecoration:"none" }}>
+            Get the badge →
+          </a>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+function _OldMarketplace_UNUSED() {
   return (
     <div style={{ minHeight:"60vh", padding:"32px 20px" }}>
       <div style={{ maxWidth:"900px", margin:"0 auto" }}>
