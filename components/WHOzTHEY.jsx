@@ -81,6 +81,84 @@ const SEED_FACTS = [
   "Humans and dinosaurs never coexisted","Your tongue has specific zones for different tastes",
 ];
 
+// ── SPONSOR ADS — mixed into Fun Facts carousel ───────────────────────────────
+const SPONSOR_ADS = [
+  {
+    id:"s1",
+    isSponsor: true,
+    sponsor: "Travel Protection Club",
+    badge: "SPONSORED",
+    badgeColor: "#0284c7",
+    teaser: "They say golf travel is risky...",
+    body: "WHOzTHEY? says CALL BS. The Travel Protection Club + ShipSticks gives you real protection for just $75 your first year.",
+    cta: "Get Protected →",
+    ctaUrl: "https://whozthey.com",
+    accent: "#0284c7",
+  },
+  {
+    id:"s2",
+    isSponsor: true,
+    sponsor: "YatStats",
+    badge: "SPONSORED",
+    badgeColor: "#16a34a",
+    teaser: "They say high school athletes get forgotten after graduation...",
+    body: "WHOzTHEY? says CALL BS. YatStats tracks every alumni who played at the next level. See where they YAT?",
+    cta: "Explore YatStats →",
+    ctaUrl: "https://yatstats.com",
+    accent: "#16a34a",
+  },
+  {
+    id:"s3",
+    isSponsor: true,
+    sponsor: "H2Yo!",
+    badge: "SPONSORED",
+    badgeColor: "#7c3aed",
+    teaser: "They say hydration doesn't really matter that much...",
+    body: "CALL BS. H2Yo! premium hydration is Good for Yo Body. Yo Mind. And Yo Business. Branded water that works as hard as you do.",
+    cta: "Get H2Yo! →",
+    ctaUrl: "https://whozthey.com",
+    accent: "#7c3aed",
+  },
+  {
+    id:"s4",
+    isSponsor: true,
+    sponsor: "ARMS Reach Digital Agency",
+    badge: "SPONSORED",
+    badgeColor: "#dc2626",
+    teaser: "They say you can't automate real relationships...",
+    body: "WHOzTHEY? says watch us. ARMS Reach builds AI-powered sales funnels and CRM systems that keep you connected at scale.",
+    cta: "Meet ARMS Reach →",
+    ctaUrl: "https://whozthey.com",
+    accent: "#dc2626",
+  },
+  {
+    id:"s5",
+    isSponsor: true,
+    sponsor: "ASB · peteismyagent.com",
+    badge: "SPONSORED",
+    badgeColor: "#d97706",
+    teaser: "They say promotional products don't drive real sales...",
+    body: "CALL BS. Over 1,000,000 branded products at your fingertips. ASB turns every giveaway into a sales conversation.",
+    cta: "Shop Promo Products →",
+    ctaUrl: "https://peteismyagent.com",
+    accent: "#d97706",
+  },
+];
+
+// Interleave sponsor ads every 4 fact cards
+function buildCarousel() {
+  const items = [];
+  SEED_FACTS.forEach((fact, i) => {
+    items.push({ isSponsor: false, teaser: fact, id: `f${i}` });
+    if ((i + 1) % 4 === 0) {
+      const ad = SPONSOR_ADS[Math.floor((i + 1) / 4 - 1) % SPONSOR_ADS.length];
+      items.push(ad);
+    }
+  });
+  return items;
+}
+const CAROUSEL_ITEMS = buildCarousel();
+
 // ── MERCH DATA ────────────────────────────────────────────────────────────────
 const MERCH = [
   { id:1, emoji:"👤", name:'Hello, I\'m THEY Name Badge', price:"$4.99", desc:'The ultimate gag gift for every know-it-all. Wear it proudly. You\'ve been "they" this whole time.', tag:"BESTSELLER", printful:"https://printful.com", variants:["White","Red","Black"] },
@@ -166,7 +244,7 @@ function TheySaidWhat({ clarification, onSelect, onSkip }) {
 }
 
 // ── PERSONALITY QUIZ ──────────────────────────────────────────────────────────
-function PersonalityQuiz({ onComplete }) {
+function PersonalityQuiz({ onComplete, onSkip }) {
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState({ oracle:0, debunker:0, believer:0, instigator:0, peacemaker:0 });
   function pick(persona) {
@@ -184,7 +262,7 @@ function PersonalityQuiz({ onComplete }) {
         </div>
         <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 10px" }}>Find Your WHOzTHEY? Personality · {step+1} of {QUIZ_QUESTIONS.length}</p>
         <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"18px", color:"#f8fafc", lineHeight:1.5, margin:"0 0 20px" }}>{q.q}</h2>
-        <div style={{ display:"flex", flexDirection:"column", gap:"8px" }}>
+        <div style={{ display:"flex", flexDirection:"column", gap:"8px", marginBottom:"20px" }}>
           {q.options.map((opt,i)=>(
             <button key={i} onClick={()=>pick(opt.persona)} style={{ padding:"12px 16px", background:"transparent", border:"1px solid #334155", borderRadius:"8px", textAlign:"left", cursor:"pointer", fontFamily:"system-ui", fontSize:"14px", color:"#cbd5e1" }}
               onMouseEnter={e=>{e.currentTarget.style.borderColor="#dc2626";e.currentTarget.style.color="#f8fafc";}}
@@ -192,6 +270,11 @@ function PersonalityQuiz({ onComplete }) {
               {opt.label}
             </button>
           ))}
+        </div>
+        <div style={{ textAlign:"center", borderTop:"1px solid #334155", paddingTop:"16px" }}>
+          <button onClick={onSkip} style={{ background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", color:"#475569", textDecoration:"underline", padding:0 }}>
+            Skip — just take me to the site
+          </button>
         </div>
       </div>
     </div>
@@ -474,48 +557,103 @@ function AnswerPanel({ query, answer, onClear, persona, onBadgeEarned, user, onL
   );
 }
 
-// ── FUN FACTS ─────────────────────────────────────────────────────────────────
+// ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
 function FunFactsSection({ onSearch, onBadgeEarned }) {
   const [current, setCurrent] = useState(0);
   const [factAnswer, setFactAnswer] = useState(null);
   const [loading, setLoading] = useState(false);
+  const item = CAROUSEL_ITEMS[current];
+  const total = CAROUSEL_ITEMS.length;
+
   async function reveal() {
+    if (item.isSponsor) return;
     setLoading(true); setFactAnswer(null);
-    try { const r=await fetchAnswer(SEED_FACTS[current]); setFactAnswer(r); onBadgeEarned("fun_fact_fan"); }
+    try { const r=await fetchAnswer(item.teaser); setFactAnswer(r); onBadgeEarned("fun_fact_fan"); }
     catch { setFactAnswer({ verdict:"DISPUTED", whoIsThey:"We couldn't retrieve that right now.", sources:[] }); }
     finally { setLoading(false); }
   }
   function goTo(i) { setCurrent(i); setFactAnswer(null); }
+  function prev() { goTo((current-1+total)%total); }
+  function next() { goTo((current+1)%total); }
+
   return (
-    <section style={{ background:"#fffbeb", borderTop:"1px solid #fef3c7", borderBottom:"1px solid #fef3c7", padding:"28px 20px" }}>
+    <section style={{ background:"#fffbeb", borderTop:"1px solid #fef3c7", borderBottom:"1px solid #fef3c7", padding:"16px 16px" }}>
       <div style={{ maxWidth:"760px", margin:"0 auto" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"16px" }}>
-          <span>★</span>
-          <span style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706" }}>They Say… Fun Facts</span>
-          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#d97706", marginLeft:"auto" }}>{current+1} / {SEED_FACTS.length}</span>
+        {/* Header */}
+        <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"10px" }}>
+          <span style={{ fontSize:"14px" }}>★</span>
+          <span style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706" }}>
+            {item.isSponsor ? "SPONSORED" : "They Say… Fun Facts"}
+          </span>
+          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#d97706", marginLeft:"auto" }}>{current+1} / {total}</span>
         </div>
-        <div style={{ background:"#fff", border:"1px solid #fde68a", borderRadius:"8px", padding:"20px 22px", marginBottom:"14px" }}>
-          <p style={{ fontFamily:"'Georgia',serif", fontSize:"17px", fontWeight:"700", color:"#0f172a", margin:"0 0 14px", lineHeight:1.4 }}>
-            <span style={{ color:"#dc2626" }}>They say</span> {SEED_FACTS[current].toLowerCase()}…
-          </p>
-          {!factAnswer&&!loading&&<button onClick={reveal} style={{ display:"inline-flex", alignItems:"center", padding:"8px 16px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#fff" }}><BrandLabel light /></button>}
-          {loading&&<div style={{ display:"flex", alignItems:"center", gap:"8px" }}><div style={{ width:"16px", height:"16px", border:"2px solid #fde68a", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} /><span style={{ fontFamily:"system-ui", fontSize:"12px", color:"#d97706" }}>Researching…</span></div>}
-          {factAnswer&&!loading&&(
-            <div style={{ borderTop:"1px solid #fef3c7", paddingTop:"12px" }}>
-              <span style={{ display:"inline-block", padding:"2px 10px", borderRadius:"20px", marginBottom:"10px", background:factAnswer.verdict==="TRUE"?"#16a34a":factAnswer.verdict==="FALSE"?"#dc2626":"#d97706", color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", textTransform:"uppercase", letterSpacing:"0.08em" }}>
-                {factAnswer.verdict==="TRUE"?"✓ TRUE":factAnswer.verdict==="FALSE"?"✗ FALSE":`◐ ${factAnswer.verdict}`}
-              </span>
-              <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", lineHeight:"1.7", margin:"0 0 4px" }}><strong style={{ color:"#92400e" }}>WHOzTHEY?</strong> {factAnswer.whoIsThey}</p>
-              {factAnswer.sources?.[0]&&<p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#92400e", fontStyle:"italic", margin:"0 0 10px" }}>— {factAnswer.sources[0]}</p>}
-              <button onClick={()=>onSearch(SEED_FACTS[current])} style={{ background:"none", border:"1px solid #fde68a", borderRadius:"4px", padding:"4px 12px", fontFamily:"system-ui", fontSize:"11px", color:"#d97706", cursor:"pointer", marginRight:"8px" }}>Full research ↗</button>
-              <button onClick={()=>setFactAnswer(null)} style={{ background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"11px", color:"#d97706", padding:0 }}>Hide ↑</button>
-            </div>
-          )}
-        </div>
+
+        {/* Card */}
+        {item.isSponsor ? (
+          /* ── SPONSOR CARD ── */
+          <div style={{ background:"#fff", border:`2px solid ${item.accent}20`, borderRadius:"8px", padding:"16px 18px", marginBottom:"12px", position:"relative" }}>
+            <span style={{ display:"inline-block", padding:"2px 8px", background:item.accent, color:"#fff", borderRadius:"4px", fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.08em", marginBottom:"8px" }}>
+              AD · {item.sponsor}
+            </span>
+            <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", fontWeight:"700", color:"#0f172a", margin:"0 0 8px", lineHeight:1.4 }}>
+              <span style={{ color:"#dc2626" }}>They say</span> {item.teaser.replace(/^they say\s*/i,"")}
+            </p>
+            <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", lineHeight:"1.6", margin:"0 0 14px" }}>
+              {item.body}
+            </p>
+            <a href={item.ctaUrl} target="_blank" rel="noopener" style={{
+              display:"inline-block", padding:"9px 20px",
+              background:item.accent, color:"#fff", borderRadius:"6px",
+              fontFamily:"system-ui", fontSize:"13px", fontWeight:"700",
+              textDecoration:"none",
+            }}>
+              {item.cta}
+            </a>
+          </div>
+        ) : (
+          /* ── FACT CARD ── */
+          <div style={{ background:"#fff", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 18px", marginBottom:"12px" }}>
+            <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", fontWeight:"700", color:"#0f172a", margin:"0 0 12px", lineHeight:1.4 }}>
+              <span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}…
+            </p>
+            {!factAnswer&&!loading&&(
+              <button onClick={reveal} style={{ display:"inline-flex", alignItems:"center", padding:"8px 16px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#fff" }}>
+                <BrandLabel light />
+              </button>
+            )}
+            {loading&&(
+              <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                <div style={{ width:"14px", height:"14px", border:"2px solid #fde68a", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
+                <span style={{ fontFamily:"system-ui", fontSize:"12px", color:"#d97706" }}>Researching…</span>
+              </div>
+            )}
+            {factAnswer&&!loading&&(
+              <div style={{ borderTop:"1px solid #fef3c7", paddingTop:"10px" }}>
+                <span style={{ display:"inline-block", padding:"2px 10px", borderRadius:"20px", marginBottom:"8px", background:factAnswer.verdict==="TRUE"?"#16a34a":factAnswer.verdict==="FALSE"?"#dc2626":"#d97706", color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", textTransform:"uppercase" }}>
+                  {factAnswer.verdict==="TRUE"?"✓ TRUE":factAnswer.verdict==="FALSE"?"✗ FALSE":`◐ ${factAnswer.verdict}`}
+                </span>
+                <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", lineHeight:"1.6", margin:"0 0 4px" }}><strong style={{ color:"#92400e" }}>WHOzTHEY?</strong> {factAnswer.whoIsThey}</p>
+                {factAnswer.sources?.[0]&&<p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#92400e", fontStyle:"italic", margin:"0 0 8px" }}>— {factAnswer.sources[0]}</p>}
+                <button onClick={()=>onSearch(item.teaser)} style={{ background:"none", border:"1px solid #fde68a", borderRadius:"4px", padding:"4px 10px", fontFamily:"system-ui", fontSize:"11px", color:"#d97706", cursor:"pointer", marginRight:"8px" }}>Full research ↗</button>
+                <button onClick={()=>setFactAnswer(null)} style={{ background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"11px", color:"#d97706", padding:0 }}>Hide ↑</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Nav */}
         <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:"8px" }}>
-          <button onClick={()=>goTo((current-1+SEED_FACTS.length)%SEED_FACTS.length)} style={{ padding:"7px 16px", background:"#fff", border:"1px solid #fde68a", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", color:"#92400e", cursor:"pointer" }}>← Prev</button>
-          <div style={{ display:"flex", gap:"4px" }}>{SEED_FACTS.map((_,i)=><button key={i} onClick={()=>goTo(i)} style={{ width:"7px", height:"7px", borderRadius:"50%", border:"none", background:i===current?"#dc2626":"#fde68a", cursor:"pointer", padding:0 }} />)}</div>
-          <button onClick={()=>goTo((current+1)%SEED_FACTS.length)} style={{ padding:"7px 16px", background:"#fff", border:"1px solid #fde68a", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", color:"#92400e", cursor:"pointer" }}>Next →</button>
+          <button onClick={prev} style={{ padding:"6px 14px", background:"#fff", border:"1px solid #fde68a", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", color:"#92400e", cursor:"pointer" }}>← Prev</button>
+          <div style={{ display:"flex", gap:"3px", flexWrap:"wrap", justifyContent:"center", maxWidth:"200px" }}>
+            {CAROUSEL_ITEMS.map((_,i)=>(
+              <button key={i} onClick={()=>goTo(i)} style={{
+                width:"7px", height:"7px", borderRadius:"50%", border:"none",
+                background: i===current ? "#dc2626" : _.isSponsor ? "#0284c7" : "#fde68a",
+                cursor:"pointer", padding:0, opacity: i===current?1:0.6,
+              }} />
+            ))}
+          </div>
+          <button onClick={next} style={{ padding:"6px 14px", background:"#fff", border:"1px solid #fde68a", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", color:"#92400e", cursor:"pointer" }}>Next →</button>
         </div>
       </div>
     </section>
@@ -605,7 +743,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest }) {
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
   return (
-    <section style={{ background:"linear-gradient(160deg,#0f172a 0%,#1e293b 100%)", padding:"44px 20px 40px", textAlign:"center" }}>
+    <section style={{ background:"linear-gradient(160deg,#0f172a 0%,#1e293b 100%)", padding:"24px 20px 20px", textAlign:"center" }}>
       <div style={{ marginBottom:"8px" }}><Wordmark size={44} /></div>
       <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#64748b", letterSpacing:"0.1em", textTransform:"uppercase", margin:"0 0 20px", whiteSpace:"nowrap" }}>
         Tracing the origin of everything "<strong style={{ color:"#94a3b8", fontWeight:"800" }}>THEY</strong>" ever said
@@ -741,7 +879,7 @@ export default function WHOzTHEY() {
 
   function handleClear() { setQuery(""); setAnswer(null); setError(null); setClarification(null); }
 
-  if (screen==="quiz") return <PersonalityQuiz onComplete={k=>{ setPersona(k); setScreen("main"); }} />;
+  if (screen==="quiz") return <PersonalityQuiz onComplete={k=>{ setPersona(k); setScreen("main"); }} onSkip={()=>setScreen("main")} />;
 
   const TABS = [
     { id:"search", label:"🔍 Search" },
@@ -751,6 +889,9 @@ export default function WHOzTHEY() {
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
       <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} />
+
+      {/* Fun Facts + Sponsor Carousel — always visible, right under the hero */}
+      <FunFactsSection onSearch={handleSearch} onBadgeEarned={earnBadge} />
 
       {/* Tab Nav */}
       <div style={{ background:"#fff", borderBottom:"1px solid #e2e8f0", display:"flex", justifyContent:"center", gap:"0" }}>
@@ -782,7 +923,6 @@ export default function WHOzTHEY() {
             )}
           </div>
           {!loading&&!answer&&!error&&!clarification&&<WelcomeState onSearch={handleSearch} />}
-          <FunFactsSection onSearch={handleSearch} onBadgeEarned={earnBadge} />
           {(answer||loading)&&<StickySearchBar onSearch={handleSearch} persona={persona} />}
         </>
       )}
