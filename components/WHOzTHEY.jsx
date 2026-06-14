@@ -613,7 +613,7 @@ function FunFactsSection({ onSearch, onBadgeEarned }) {
     const t = setInterval(() => {
       setFactAnswer(null);
       setCurrent(c => (c + 1) % total);
-    }, 3000);
+    }, 10000);
     return () => clearInterval(t);
   }, [paused, loading, total]);
 
@@ -629,83 +629,71 @@ function FunFactsSection({ onSearch, onBadgeEarned }) {
   function next() { goTo((current+1)%total); }
 
   return (
-    <section style={{ background:"#fffbeb", borderTop:"1px solid #fef3c7", borderBottom:"1px solid #fef3c7", padding:"16px 16px" }}>
+    <section style={{ background:"#fffbeb", borderTop:"2px solid #fde68a", padding:"10px 16px 12px", position:"sticky", bottom:0, zIndex:40, boxShadow:"0 -4px 16px rgba(0,0,0,0.08)" }}>
       <div style={{ maxWidth:"760px", margin:"0 auto" }}>
-        {/* Header */}
-        <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"10px" }}>
-          <span style={{ fontSize:"14px" }}>★</span>
-          <span style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706" }}>
-            {item.isSponsor ? "SPONSORED" : "They Say… Fun Facts"}
+        {/* Compact header - no extra space */}
+        <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"6px" }}>
+          <span style={{ fontSize:"11px" }}>★</span>
+          <span style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#d97706" }}>
+            {item.isSponsor ? "SPONSORED" : "They Say…"}
           </span>
-          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#d97706", marginLeft:"auto" }}>{current+1} / {total}</span>
         </div>
 
         {/* Card */}
         {item.isSponsor ? (
           /* ── SPONSOR CARD ── */
-          <div style={{ background:"#fff", border:`2px solid ${item.accent}20`, borderRadius:"8px", padding:"16px 18px", marginBottom:"12px", position:"relative" }}>
-            <span style={{ display:"inline-block", padding:"2px 8px", background:item.accent, color:"#fff", borderRadius:"4px", fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.08em", marginBottom:"8px" }}>
-              AD · {item.sponsor}
-            </span>
-            <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", fontWeight:"700", color:"#0f172a", margin:"0 0 8px", lineHeight:1.4 }}>
-              <span style={{ color:"#dc2626" }}>They say</span> {item.teaser.replace(/^they say\s*/i,"")}
-            </p>
-            <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", lineHeight:"1.6", margin:"0 0 14px" }}>
-              {item.body}
-            </p>
+          <div style={{ background:"#fff", border:`2px solid ${item.accent}20`, borderRadius:"8px", padding:"10px 14px", display:"flex", alignItems:"center", gap:"10px" }}>
+            <div style={{ flex:1, minWidth:0 }}>
+              <span style={{ display:"inline-block", padding:"1px 6px", background:item.accent, color:"#fff", borderRadius:"4px", fontFamily:"system-ui", fontSize:"8px", fontWeight:"700", letterSpacing:"0.08em", marginBottom:"4px" }}>
+                AD · {item.sponsor}
+              </span>
+              <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#0f172a", margin:"0", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
+                <span style={{ color:"#dc2626" }}>They say</span> {item.teaser.replace(/^they say\s*/i,"")}
+              </p>
+            </div>
             <a href={item.ctaUrl} target="_blank" rel="noopener" style={{
-              display:"inline-block", padding:"9px 20px",
+              flexShrink:0, padding:"8px 12px",
               background:item.accent, color:"#fff", borderRadius:"6px",
-              fontFamily:"system-ui", fontSize:"13px", fontWeight:"700",
-              textDecoration:"none",
+              fontFamily:"system-ui", fontSize:"11px", fontWeight:"700",
+              textDecoration:"none", whiteSpace:"nowrap",
             }}>
               {item.cta}
             </a>
           </div>
         ) : (
           /* ── FACT CARD ── */
-          <div style={{ background:"#fff", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 18px", marginBottom:"12px" }}>
-            <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", fontWeight:"700", color:"#0f172a", margin:"0 0 12px", lineHeight:1.4 }}>
-              <span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}…
-            </p>
+          <div style={{ background:"#fff", border:"1px solid #fde68a", borderRadius:"8px", padding:"10px 14px", display:"flex", alignItems:"center", gap:"10px" }}>
+            <div style={{ flex:1, minWidth:0 }}>
+              <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#0f172a", margin:0, lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
+                <span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}…
+              </p>
+              {factAnswer&&!loading&&(
+                <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#92400e", margin:"4px 0 0", lineHeight:1.4, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
+                  {factAnswer.whoIsThey}
+                </p>
+              )}
+            </div>
             {!factAnswer&&!loading&&(
-              <button onClick={reveal} style={{ display:"inline-flex", alignItems:"center", padding:"8px 16px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#fff" }}>
-                <BrandLabel light />
+              <button onClick={reveal} style={{ flexShrink:0, padding:"8px 12px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", color:"#fff", whiteSpace:"nowrap" }}>
+                WHO<span style={{ color:"#fca5a5" }}>z</span>THEY?
               </button>
             )}
-            {loading&&(
-              <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-                <div style={{ width:"14px", height:"14px", border:"2px solid #fde68a", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
-                <span style={{ fontFamily:"system-ui", fontSize:"12px", color:"#d97706" }}>Researching…</span>
-              </div>
-            )}
+            {loading&&<div style={{ flexShrink:0, width:"16px", height:"16px", border:"2px solid #fde68a", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />}
             {factAnswer&&!loading&&(
-              <div style={{ borderTop:"1px solid #fef3c7", paddingTop:"10px" }}>
-                <span style={{ display:"inline-block", padding:"2px 10px", borderRadius:"20px", marginBottom:"8px", background:factAnswer.verdict==="TRUE"?"#16a34a":factAnswer.verdict==="FALSE"?"#dc2626":"#d97706", color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", textTransform:"uppercase" }}>
-                  {factAnswer.verdict==="TRUE"?"✓ TRUE":factAnswer.verdict==="FALSE"?"✗ FALSE":`◐ ${factAnswer.verdict}`}
-                </span>
-                <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", lineHeight:"1.6", margin:"0 0 4px" }}><strong style={{ color:"#92400e" }}>WHOzTHEY?</strong> {factAnswer.whoIsThey}</p>
-                {factAnswer.sources?.[0]&&<p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#92400e", fontStyle:"italic", margin:"0 0 8px" }}>— {factAnswer.sources[0]}</p>}
-                <button onClick={()=>onSearch(item.teaser)} style={{ background:"none", border:"1px solid #fde68a", borderRadius:"4px", padding:"4px 10px", fontFamily:"system-ui", fontSize:"11px", color:"#d97706", cursor:"pointer", marginRight:"8px" }}>Full research ↗</button>
-                <button onClick={()=>setFactAnswer(null)} style={{ background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"11px", color:"#d97706", padding:0 }}>Hide ↑</button>
-              </div>
+              <button onClick={()=>onSearch(item.teaser)} style={{ flexShrink:0, padding:"8px 12px", background:"#d97706", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", color:"#fff", whiteSpace:"nowrap" }}>
+                Full ↗
+              </button>
             )}
           </div>
         )}
 
-        {/* Nav */}
-        <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:"8px" }}>
-          <button onClick={prev} style={{ padding:"6px 14px", background:"#fff", border:"1px solid #fde68a", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", color:"#92400e", cursor:"pointer" }}>← Prev</button>
-          <div style={{ display:"flex", gap:"3px", flexWrap:"wrap", justifyContent:"center", maxWidth:"200px" }}>
-            {CAROUSEL_ITEMS.map((_,i)=>(
-              <button key={i} onClick={()=>goTo(i)} style={{
-                width:"7px", height:"7px", borderRadius:"50%", border:"none",
-                background: i===current ? "#dc2626" : _.isSponsor ? "#0284c7" : "#fde68a",
-                cursor:"pointer", padding:0, opacity: i===current?1:0.6,
-              }} />
-            ))}
-          </div>
-          <button onClick={next} style={{ padding:"6px 14px", background:"#fff", border:"1px solid #fde68a", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", color:"#92400e", cursor:"pointer" }}>Next →</button>
+        {/* Compact arrow-only nav */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:"8px" }}>
+          <button onClick={prev} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"20px", color:"#d97706", padding:"4px 8px", lineHeight:1 }}>‹</button>
+          <span style={{ fontFamily:"system-ui", fontSize:"10px", color:"#d97706", letterSpacing:"0.06em" }}>
+            {item.isSponsor ? `AD ${current+1}/${total}` : `${current+1} / ${total}`}
+          </span>
+          <button onClick={next} style={{ background:"none", border:"none", cursor:"pointer", fontSize:"20px", color:"#d97706", padding:"4px 8px", lineHeight:1 }}>›</button>
         </div>
       </div>
     </section>
@@ -863,33 +851,50 @@ function _OldMarketplace_UNUSED() {
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-function Hero({ onSearch, loading, persona, user, onLoginRequest }) {
+function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest }) {
   const [claim, setClaim] = useState("");
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
   return (
-    <section style={{ background:"linear-gradient(160deg,#0f172a 0%,#1e293b 100%)", padding:"24px 20px 20px", textAlign:"center" }}>
-      <div style={{ marginBottom:"8px" }}><Wordmark size={44} /></div>
-      <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#64748b", letterSpacing:"0.1em", textTransform:"uppercase", margin:"0 0 20px", whiteSpace:"nowrap" }}>
-        Tracing the origin of everything "<strong style={{ color:"#94a3b8", fontWeight:"800" }}>THEY</strong>" ever said
-      </p>
-      <div style={{ display:"flex", justifyContent:"center", gap:"8px", marginBottom:"24px", flexWrap:"wrap" }}>
-        {p && <div style={{ display:"inline-flex", alignItems:"center", gap:"6px", background:"#1e293b", border:`1px solid ${p.border}`, borderRadius:"20px", padding:"4px 14px" }}><span>{p.emoji}</span><span style={{ fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", color:p.color }}>{p.title}</span></div>}
-        {user
-          ? <div style={{ display:"inline-flex", alignItems:"center", gap:"6px", background:"#1e293b", border:"1px solid #334155", borderRadius:"20px", padding:"4px 14px" }}><span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8" }}>👤 {user.name}</span></div>
-          : <button onClick={onLoginRequest} style={{ display:"inline-flex", alignItems:"center", gap:"6px", background:"transparent", border:"1px solid #334155", borderRadius:"20px", padding:"4px 14px", cursor:"pointer", fontFamily:"system-ui", fontSize:"11px", color:"#64748b" }}>Sign in to comment</button>
-        }
+    <section style={{ background:"linear-gradient(160deg,#0f172a 0%,#1e293b 100%)", padding:"20px 20px 18px", textAlign:"center" }}>
+      {/* Top bar: logo left, auth right */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"12px" }}>
+        <div style={{ flex:1 }} />
+        <div><Wordmark size={44} /></div>
+        <div style={{ flex:1, display:"flex", justifyContent:"flex-end", gap:"6px", alignItems:"center" }}>
+          {p && <span title={p.title} style={{ fontSize:"18px", cursor:"pointer" }} onClick={onQuizRequest}>{p.emoji}</span>}
+          {user
+            ? <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#64748b" }}>👤 {user.name}</span>
+            : <button onClick={onLoginRequest} style={{ background:"transparent", border:"1px solid #334155", borderRadius:"20px", padding:"4px 12px", cursor:"pointer", fontFamily:"system-ui", fontSize:"10px", color:"#64748b" }}>Sign In</button>
+          }
+          <button onClick={onQuizRequest} style={{ background:"#dc2626", border:"none", borderRadius:"20px", padding:"4px 12px", cursor:"pointer", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", color:"#fff", whiteSpace:"nowrap" }}>
+            Quiz 🎯
+          </button>
+        </div>
       </div>
-      <div style={{ maxWidth:"620px", margin:"0 auto" }}>
-        <p style={{ fontFamily:"'Georgia',serif", fontSize:"14px", color:"#94a3b8", fontStyle:"italic", margin:"0 0 14px" }}>You've heard it. Now find out where it really came from.</p>
-        <div style={{ display:"flex", alignItems:"stretch", background:"#0f172a", border:"1px solid #334155", borderRadius:"8px 8px 0 0", overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,0.4)" }}>
-          <span style={{ fontFamily:"'Georgia',serif", fontSize:"15px", fontWeight:"700", color:"#dc2626", padding:"15px 0 15px 16px", whiteSpace:"nowrap", display:"flex", alignItems:"center" }}>They say…</span>
-          <input type="text" value={claim} onChange={e=>setClaim(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder="you lose heat through your head" style={{ flex:1, padding:"15px 12px", background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"14px", color:"#f8fafc", minWidth:0 }} />
+
+      {/* One-line tagline — no wrap */}
+      <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", color:"#94a3b8", fontStyle:"italic", margin:"0 0 14px", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+        You've heard it. Now find out where it really came from.
+      </p>
+
+      {/* Search */}
+      <div style={{ maxWidth:"580px", margin:"0 auto" }}>
+        <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#dc2626", margin:"0 0 6px", textAlign:"left", letterSpacing:"0.02em" }}>
+          They say…
+        </p>
+        <div style={{ background:"#0f172a", border:"1px solid #334155", borderRadius:"8px 8px 0 0", overflow:"hidden", boxShadow:"0 4px 24px rgba(0,0,0,0.4)" }}>
+          <input
+            type="text" value={claim}
+            onChange={e=>setClaim(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&submit()}
+            placeholder="What did you hear?"
+            style={{ width:"100%", padding:"15px 16px", background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"15px", color:"#f8fafc", boxSizing:"border-box" }}
+          />
         </div>
         <button onClick={submit} disabled={loading||!claim.trim()} style={{ width:"100%", padding:"14px", background:loading?"#7f1d1d":"#dc2626", border:"none", borderRadius:"0 0 8px 8px", cursor:loading?"wait":"pointer", fontFamily:"'Georgia',serif", fontSize:"15px", fontWeight:"700", color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px", boxSizing:"border-box" }}>
           {loading?<><span style={{ width:"16px", height:"16px", border:"2px solid #fca5a5", borderTopColor:"transparent", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" }} />Searching…</>:<BrandLabel light />}
         </button>
-        <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#334155", marginTop:"10px" }}>Try: "cracking knuckles causes arthritis" · "hair grows back thicker after shaving"</p>
       </div>
     </section>
   );
@@ -941,10 +946,11 @@ function StickySearchBar({ onSearch, persona }) {
 
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function WHOzTHEY() {
-  const [screen, setScreen]           = useState("quiz");
+  const [screen, setScreen]           = useState("main");
   const [activeTab, setActiveTab]     = useState("search");
   const [persona, setPersona]         = useState(null);
   const [showPersona, setShowPersona] = useState(true);
+  const [showQuiz, setShowQuiz]       = useState(false);
   const [badges, setBadges]           = useState([]);
   const [toastBadge, setToastBadge]   = useState(null);
   const [user, setUser]               = useState(null);
@@ -1004,7 +1010,7 @@ export default function WHOzTHEY() {
 
   function handleClear() { setQuery(""); setAnswer(null); setError(null); setClarification(null); }
 
-  if (screen==="quiz") return <PersonalityQuiz onComplete={k=>{ setPersona(k); setScreen("main"); }} onSkip={()=>setScreen("main")} />;
+  // Quiz is now opt-in only — no longer the landing screen
 
   const TABS = [
     { id:"search", label:"🔍 Search" },
@@ -1013,7 +1019,7 @@ export default function WHOzTHEY() {
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} />
 
       {/* Fun Facts + Sponsor Carousel — always visible, right under the hero */}
       <FunFactsSection onSearch={handleSearch} onBadgeEarned={earnBadge} />
@@ -1061,6 +1067,14 @@ export default function WHOzTHEY() {
       </footer>
 
       {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} onLogin={u=>{ setUser(u); setShowPersona(true); }} />}
+      {showQuiz&&(
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
+          <div style={{ background:"#1e293b", borderRadius:"12px", padding:"8px", maxWidth:"480px", width:"100%", position:"relative" }}>
+            <button onClick={()=>setShowQuiz(false)} style={{ position:"absolute", top:"12px", right:"12px", background:"none", border:"none", color:"#94a3b8", fontSize:"20px", cursor:"pointer", zIndex:1 }}>✕</button>
+            <PersonalityQuiz onComplete={k=>{ setPersona(k); setShowQuiz(false); setShowPersona(true); }} onSkip={()=>setShowQuiz(false)} />
+          </div>
+        </div>
+      )}
       {toastBadge&&<BadgeToast badge={toastBadge} onDone={()=>setToastBadge(null)} />}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
     </div>
