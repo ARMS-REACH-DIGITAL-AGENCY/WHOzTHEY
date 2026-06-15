@@ -1,6 +1,17 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react";
+import { initializeApp, getApp, getApps } from "firebase/app";
+import {
+  createUserWithEmailAndPassword,
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  updateProfile,
+} from "firebase/auth";
 
 // ── BRAND ─────────────────────────────────────────────────────────────────────
 function Wordmark({ size=32 }) {
@@ -184,12 +195,16 @@ async function fetchClarification(claim) {
   return res.json();
 }
 
-async function fetchAnswer(claim) {
+async function fetchAnswer(claim, context = {}) {
   // SECURE: API key lives on the server in /api/search — never in the browser
   const res = await fetch("/api/search", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ claim }),
+    body: JSON.stringify({
+      claim,
+      sessionId: context.sessionId || null,
+      firebaseUid: context.firebaseUid || null,
+    }),
   });
   if (!res.ok) throw new Error("Search failed");
   return res.json();
@@ -209,6 +224,42 @@ const VERDICT_MAP = {
   MYTH:             { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
   DISPUTED:         { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", label:"🤷 Genuinely Disputed" },
 };
+
+// ── FIREBASE AUTH ─────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+};
+
+function getFirebaseAuth() {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  return getAuth(app);
+}
+
+function appUserFromFirebase(firebaseUser) {
+  if (!firebaseUser) return null;
+  return {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email || "",
+    name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "WHOzTHEY User",
+    photoURL: firebaseUser.photoURL || null,
+  };
+}
+
+function friendlyAuthError(error) {
+  const code = error?.code || "";
+  if (code.includes("invalid-credential") || code.includes("wrong-password") || code.includes("user-not-found")) return "That email/password combination did not work.";
+  if (code.includes("email-already-in-use")) return "That email already has an account. Try signing in instead.";
+  if (code.includes("weak-password")) return "Please use a password with at least 6 characters.";
+  if (code.includes("popup-closed-by-user")) return "Google sign-in was closed before it finished.";
+  if (code.includes("unauthorized-domain")) return "This domain is not authorized in Firebase Authentication yet.";
+  return error?.message || "Sign-in failed. Please try again.";
+}
 
 // ── THEY SAID WHAT? ───────────────────────────────────────────────────────────
 function TheySaidWhat({ clarification, onSelect, onSkip }) {
@@ -258,7 +309,7 @@ function PersonalityQuiz({ onComplete, onSkip }) {
   function pick(persona) {
     const next = { ...scores, [persona]:scores[persona]+1 };
     if (step < QUIZ_QUESTIONS.length-1) { setScores(next); setStep(step+1); }
-    else { const winner = Object.entries(next).sort((a,b)=>b[1]-a[1])[0][0]; onComplete(winner); }
+    else { const winner = Object.entries(next).sort((a,b)=>b[1]-a[0])[0][0]; onComplete(winner); }
   }
   const q = QUIZ_QUESTIONS[step];
   return (
@@ -348,46 +399,113 @@ function ShareButton({ query, verdict }) {
   );
 }
 
-// ── FIREBASE LOGIN MOCK ───────────────────────────────────────────────────────
-function LoginModal({ onClose, onLogin }) {
+// ── FIREBASE LOGIN ───────────────────────────────────────────────────────────
+function LoginModal({ onClose, onLogin, currentUser, onLogout }) {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  function handleSubmit() {
-    if (!email.trim()) return;
-    onLogin({ email:email.trim(), name:name.trim()||email.split("@")[0], uid:"user_"+Date.now() });
-    onClose();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit() {
+    setError("");
+    if (!email.trim()) { setError("Enter your email address."); return; }
+    if (!password.trim()) { setError("Enter your password."); return; }
+
+    setBusy(true);
+    try {
+      const auth = getFirebaseAuth();
+      let credential;
+      if (mode === "signup") {
+        credential = await createUserWithEmailAndPassword(auth, email.trim(), password);
+        if (name.trim()) await updateProfile(credential.user, { displayName: name.trim() });
+      } else {
+        credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      }
+      onLogin(appUserFromFirebase(credential.user));
+      onClose();
+    } catch (err) {
+      setError(friendlyAuthError(err));
+    } finally {
+      setBusy(false);
+    }
   }
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setBusy(true);
+    try {
+      const auth = getFirebaseAuth();
+      const provider = new GoogleAuthProvider();
+      const credential = await signInWithPopup(auth, provider);
+      onLogin(appUserFromFirebase(credential.user));
+      onClose();
+    } catch (err) {
+      setError(friendlyAuthError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleLogout() {
+    setBusy(true);
+    try {
+      await signOut(getFirebaseAuth());
+      onLogout?.();
+      onClose();
+    } catch (err) {
+      setError(friendlyAuthError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
       <div style={{ background:"#1e293b", border:"1px solid #334155", borderRadius:"12px", padding:"28px 24px", width:"100%", maxWidth:"380px" }}>
         <div style={{ textAlign:"center", marginBottom:"20px" }}>
           <Wordmark size={28} />
-          <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", marginTop:"8px" }}>Sign in to comment & join the debate</p>
+          <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", marginTop:"8px" }}>{currentUser ? "You are signed in to WHOzTHEY?" : "Sign in to comment & join the debate"}</p>
         </div>
-        <div style={{ display:"flex", gap:"0", marginBottom:"20px", border:"1px solid #334155", borderRadius:"6px", overflow:"hidden" }}>
-          {["login","signup"].map(m=>(
-            <button key={m} onClick={()=>setMode(m)} style={{ flex:1, padding:"8px", background:mode===m?"#dc2626":"transparent", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:mode===m?"#fff":"#64748b", textTransform:"uppercase", letterSpacing:"0.06em" }}>{m==="login"?"Sign In":"Sign Up"}</button>
-          ))}
-        </div>
-        {mode==="signup" && (
-          <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" style={{ width:"100%", padding:"10px 12px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", fontFamily:"system-ui", fontSize:"14px", color:"#f8fafc", outline:"none", marginBottom:"10px", boxSizing:"border-box" }} />
-        )}
-        <input value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSubmit()} placeholder="Email address" type="email" style={{ width:"100%", padding:"10px 12px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", fontFamily:"system-ui", fontSize:"14px", color:"#f8fafc", outline:"none", marginBottom:"14px", boxSizing:"border-box" }} />
-        <button onClick={handleSubmit} style={{ width:"100%", padding:"12px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", marginBottom:"10px" }}>
-          {mode==="login"?"Sign In →":"Create Account →"}
-        </button>
-        <div style={{ textAlign:"center", marginBottom:"14px" }}>
-          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#475569" }}>or continue with</span>
-        </div>
-        <div style={{ display:"flex", gap:"8px", marginBottom:"16px" }}>
-          {["Google","Facebook"].map(p=>(
-            <button key={p} onClick={()=>{ onLogin({ email:`user@${p.toLowerCase()}.com`, name:`${p} User`, uid:"user_"+Date.now() }); onClose(); }} style={{ flex:1, padding:"9px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", color:"#cbd5e1", fontWeight:"600" }}>
-              {p==="Google"?"🔵":"📘"} {p}
+
+        {currentUser ? (
+          <>
+            <div style={{ background:"#0f172a", border:"1px solid #334155", borderRadius:"8px", padding:"14px", marginBottom:"14px" }}>
+              <p style={{ fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#f8fafc", margin:"0 0 4px" }}>{currentUser.name}</p>
+              <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#94a3b8", margin:0 }}>{currentUser.email}</p>
+            </div>
+            <button onClick={handleLogout} disabled={busy} style={{ width:"100%", padding:"12px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:busy?"wait":"pointer", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", marginBottom:"10px" }}>
+              {busy ? "Signing out…" : "Sign Out"}
             </button>
-          ))}
-        </div>
-        <button onClick={onClose} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", color:"#475569" }}>Cancel</button>
+            {error && <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#fca5a5", margin:"0 0 10px", lineHeight:1.4 }}>{error}</p>}
+            <button onClick={onClose} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", color:"#64748b" }}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <div style={{ display:"flex", gap:"0", marginBottom:"20px", border:"1px solid #334155", borderRadius:"6px", overflow:"hidden" }}>
+              {["login","signup"].map(m=>(
+                <button key={m} onClick={()=>{ setMode(m); setError(""); }} style={{ flex:1, padding:"8px", background:mode===m?"#dc2626":"transparent", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:mode===m?"#fff":"#64748b", textTransform:"uppercase", letterSpacing:"0.06em" }}>{m==="login"?"Sign In":"Sign Up"}</button>
+              ))}
+            </div>
+            {mode==="signup" && (
+              <input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name" style={{ width:"100%", padding:"10px 12px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", fontFamily:"system-ui", fontSize:"14px", color:"#f8fafc", outline:"none", marginBottom:"10px", boxSizing:"border-box" }} />
+            )}
+            <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" type="email" autoComplete="email" style={{ width:"100%", padding:"10px 12px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", fontFamily:"system-ui", fontSize:"14px", color:"#f8fafc", outline:"none", marginBottom:"10px", boxSizing:"border-box" }} />
+            <input value={password} onChange={e=>setPassword(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSubmit()} placeholder="Password" type="password" autoComplete={mode==="signup"?"new-password":"current-password"} style={{ width:"100%", padding:"10px 12px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", fontFamily:"system-ui", fontSize:"14px", color:"#f8fafc", outline:"none", marginBottom:"14px", boxSizing:"border-box" }} />
+            {error && <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#fca5a5", margin:"0 0 10px", lineHeight:1.4 }}>{error}</p>}
+            <button onClick={handleSubmit} disabled={busy} style={{ width:"100%", padding:"12px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:busy?"wait":"pointer", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", marginBottom:"10px", opacity:busy?0.75:1 }}>
+              {busy ? "Working…" : mode==="login"?"Sign In →":"Create Account →"}
+            </button>
+            <div style={{ textAlign:"center", marginBottom:"14px" }}>
+              <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#475569" }}>or continue with</span>
+            </div>
+            <button onClick={handleGoogleSignIn} disabled={busy} style={{ width:"100%", padding:"10px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", cursor:busy?"wait":"pointer", fontFamily:"system-ui", fontSize:"12px", color:"#cbd5e1", fontWeight:"600", marginBottom:"16px" }}>
+              🔵 Google
+            </button>
+            <button onClick={onClose} style={{ width:"100%", background:"none", border:"none", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", color:"#475569" }}>Cancel</button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -948,7 +1066,23 @@ export default function WHOzTHEY() {
   const [error, setError]             = useState(null);
   const [selectedSponsor, setSelectedSponsor] = useState(null);
   const [searchCount, setSearchCount] = useState(0);
+  const [sessionId, setSessionId]     = useState(null);
   const answerRef                     = useRef(null);
+
+  useEffect(() => {
+    const key = "whozthey_session_id";
+    let stored = window.localStorage.getItem(key);
+    if (!stored) {
+      stored = window.crypto?.randomUUID?.() || `session_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      window.localStorage.setItem(key, stored);
+    }
+    setSessionId(stored);
+
+    const auth = getFirebaseAuth();
+    return onAuthStateChanged(auth, firebaseUser => {
+      setUser(appUserFromFirebase(firebaseUser));
+    });
+  }, []);
 
   useEffect(() => {
     if (activeTab !== "search") return;
@@ -992,7 +1126,7 @@ export default function WHOzTHEY() {
     earnBadge("first_search");
     if (newCount>=3) earnBadge("streak_3");
     if (newCount>=5) earnBadge("five_searches");
-    try { setAnswer(await fetchAnswer(claim)); }
+    try { setAnswer(await fetchAnswer(claim, { sessionId, firebaseUid: user?.uid })); }
     catch { setError("They say the answer is out there — but we hit an error. Please try again."); }
     finally { setLoading(false); setClarification(null); }
   }
@@ -1066,7 +1200,7 @@ export default function WHOzTHEY() {
       {/* Sticky Footer Fun Facts */}
       <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} />
 
-      {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} onLogin={u=>{ setUser(u); setShowPersona(true); }} />}
+      {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} currentUser={user} onLogin={u=>{ setUser(u); setShowPersona(true); }} onLogout={()=>{ setUser(null); }} />}
       {showQuiz&&(
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:300, display:"flex", alignItems:"center", justifyContent:"center", padding:"20px" }}>
           <div style={{ background:"#1e293b", borderRadius:"12px", padding:"8px", maxWidth:"480px", width:"100%", position:"relative" }}>
