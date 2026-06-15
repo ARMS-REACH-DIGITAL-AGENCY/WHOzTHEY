@@ -1,12 +1,137 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { neon } from '@neondatabase/serverless'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
+let sqlClient = null
+
+function getDatabaseUrl() {
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING
+  )
+}
+
+function getSql() {
+  if (!sqlClient) {
+    const databaseUrl = getDatabaseUrl()
+
+    if (!databaseUrl) {
+      throw new Error(
+        'Missing database URL. Expected DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL_NON_POOLING.'
+      )
+    }
+
+    sqlClient = neon(databaseUrl)
+  }
+
+  return sqlClient
+}
+
+function normalizeClaim(claim) {
+  return claim
+    .toLowerCase()
+    .trim()
+    .replace(/^they say\s+/i, '')
+    .replace(/[“”"']/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function getClientIpHashSource(request) {
+  // Do not store raw IPs here. This returns only a short source string that can
+  // later be replaced with a real one-way hash if needed.
+  const forwardedFor = request.headers.get('x-forwarded-for')
+  const realIp = request.headers.get('x-real-ip')
+  const ipSource = forwardedFor || realIp || ''
+
+  if (!ipSource) return null
+
+  // Simple non-sensitive fingerprint placeholder; not a real hash.
+  return `ip_seen_${ipSource.split(',')[0].trim().length}`
+}
+
+async function logSearchToNeon({ request, claim, parsed, sessionId, firebaseUid }) {
+  const sql = getSql()
+  const normalizedClaim = normalizeClaim(claim)
+  const displayClaim = claim.trim()
+  const userAgent = request.headers.get('user-agent') || null
+  const ipHash = getClientIpHashSource(request)
+
+  const claimRows = await sql`
+    insert into claims (
+      normalized_claim,
+      display_claim,
+      search_count,
+      first_searched_at,
+      last_searched_at
+    )
+    values (
+      ${normalizedClaim},
+      ${displayClaim},
+      1,
+      now(),
+      now()
+    )
+    on conflict (normalized_claim)
+    do update set
+      search_count = claims.search_count + 1,
+      last_searched_at = now(),
+      updated_at = now()
+    returning id
+  `
+
+  const claimId = claimRows[0]?.id
+
+  if (!claimId) {
+    throw new Error('Unable to create or find claim record.')
+  }
+
+  const searchRows = await sql`
+    insert into searches (
+      claim_id,
+      session_id,
+      firebase_uid,
+      raw_claim,
+      normalized_claim,
+      verdict,
+      who_is_they,
+      origin,
+      source,
+      user_agent,
+      ip_hash
+    )
+    values (
+      ${claimId},
+      ${sessionId || null},
+      ${firebaseUid || null},
+      ${displayClaim},
+      ${normalizedClaim},
+      ${parsed?.verdict || null},
+      ${parsed?.whoIsThey || null},
+      ${parsed?.origin || null},
+      'search',
+      ${userAgent},
+      ${ipHash}
+    )
+    returning id
+  `
+
+  return {
+    claimId,
+    searchId: searchRows[0]?.id || null,
+  }
+}
+
 export async function POST(request) {
   try {
-    const { claim } = await request.json()
+    const body = await request.json()
+    const { claim, sessionId, firebaseUid } = body
 
     if (!claim || claim.trim().length === 0) {
       return Response.json({ error: 'No claim provided' }, { status: 400 })
@@ -52,16 +177,43 @@ Respond ONLY with valid JSON (no markdown, no backticks):
     const raw = message.content[0].text
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
 
+    let tracking = null
+
+    try {
+      tracking = await logSearchToNeon({
+        request,
+        claim,
+        parsed,
+        sessionId,
+        firebaseUid,
+      })
+    } catch (dbError) {
+      // Do not break the user search experience if tracking fails.
+      // Check Vercel function logs if this warning appears.
+      console.warn('Search completed but Neon logging failed:', dbError)
+    }
+
     // Optional: Post to GoHighLevel webhook
     if (process.env.GHL_WEBHOOK_URL) {
       fetch(process.env.GHL_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claim, verdict: parsed.verdict, source: 'WHOzTHEY' }),
+        body: JSON.stringify({
+          claim,
+          verdict: parsed.verdict,
+          source: 'WHOzTHEY',
+          sessionId: sessionId || null,
+          firebaseUid: firebaseUid || null,
+          claimId: tracking?.claimId || null,
+          searchId: tracking?.searchId || null,
+        }),
       }).catch(() => {})
     }
 
-    return Response.json(parsed)
+    return Response.json({
+      ...parsed,
+      tracking,
+    })
   } catch (error) {
     console.error('Search error:', error)
     return Response.json({ error: 'Failed to research claim' }, { status: 500 })
