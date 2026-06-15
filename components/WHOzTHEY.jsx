@@ -210,6 +210,13 @@ async function fetchAnswer(claim, context = {}) {
   return res.json();
 }
 
+async function fetchRecentSearches() {
+  const res = await fetch("/api/recent-searches", { cache: "no-store" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data.searches) ? data.searches : [];
+}
+
 const VERDICT_MAP = {
   "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", label:"📍 Origin Traced" },
   "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", label:"⚖️ Both Sides Valid" },
@@ -309,7 +316,7 @@ function PersonalityQuiz({ onComplete, onSkip }) {
   function pick(persona) {
     const next = { ...scores, [persona]:scores[persona]+1 };
     if (step < QUIZ_QUESTIONS.length-1) { setScores(next); setStep(step+1); }
-    else { const winner = Object.entries(next).sort((a,b)=>b[1]-a[0])[0][0]; onComplete(winner); }
+    else { const winner = Object.entries(next).sort((a,b)=>b[1]-a[1])[0][0]; onComplete(winner); }
   }
   const q = QUIZ_QUESTIONS[step];
   return (
@@ -513,10 +520,7 @@ function LoginModal({ onClose, onLogin, currentUser, onLogout }) {
 
 // ── COMMENTS ──────────────────────────────────────────────────────────────────
 function CommentsSection({ claim, user, onLoginRequest }) {
-  const [comments, setComments] = useState([
-    { id:1, name:"Sarah K.", emoji:"🔥", text:"My grandmother said this every single winter. Turns out she was wrong but I still love her for it.", time:"2h ago" },
-    { id:2, name:"Marcus T.", emoji:"🏆", text:"I called this out at Thanksgiving and nobody believed me until I showed them WHOzTHEY?", time:"5h ago" },
-  ]);
+  const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   function submit() {
     if (!user) { onLoginRequest(); return; }
@@ -533,6 +537,11 @@ function CommentsSection({ claim, user, onLoginRequest }) {
           {user ? "Post" : "Sign In"}
         </button>
       </div>
+      {comments.length === 0 && (
+        <div style={{ background:"#f8fafc", border:"1px dashed #cbd5e1", borderRadius:"8px", padding:"14px" }}>
+          <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#64748b", margin:0 }}>No debate posts yet. Be the first to join in.</p>
+        </div>
+      )}
       <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
         {comments.map(c=>(
           <div key={c.id} style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"12px 14px" }}>
@@ -554,62 +563,59 @@ function DebatePanel({ query, answer, persona, onBadgeEarned }) {
   const [votes, setVotes] = useState({ claim:null, origin:null, who:null });
   const [settled, setSettled] = useState(false);
   const [shareMsg, setShareMsg] = useState("");
-  const layers = [
-    { key:"claim",  label:"THE CLAIM",    question:`They say "${query.length>40?query.slice(0,40)+"…":query}" — do you believe it?`, yes:"BELIEVE IT", no:"CALL BS" },
-    { key:"origin", label:"THE ORIGIN",   question:"Is the origin story WHOzTHEY? found accurate?", yes:"ACCURATE", no:"DISPUTED" },
-    { key:"who",    label:'WHO IS "THEY"?', question:"Is the identity of 'they' correctly identified?", yes:"CONFIRMED", no:"WRONG" },
+
+  const options = [
+    { key:"sounds_good", label:"Sounds Good", color:"#16a34a", bg:"#f0fdf4", border:"#86efac", emoji:"✓" },
+    { key:"call_bs", label:"I Call BS", color:"#dc2626", bg:"#fef2f2", border:"#fca5a5", emoji:"✗" },
+    { key:"no_clue", label:"No Clue", color:"#64748b", bg:"#f8fafc", border:"#cbd5e1", emoji:"?" },
   ];
-  const COMMUNITY = {
-    claim:  answer.verdict==="TRUE"?{yes:72,no:28}:answer.verdict==="FALSE"?{yes:31,no:69}:{yes:54,no:46},
-    origin: {yes:61,no:39}, who:{yes:58,no:42},
-  };
+
+  const layers = [
+    { key:"claim",  label:"THE CLAIM", question:`They say "${query.length>40?query.slice(0,40)+"…":query}" — what do you think?` },
+    { key:"origin", label:"THE ORIGIN", question:"Does the origin story WHOzTHEY? found sound right?" },
+    { key:"who",    label:'WHO IS "THEY"?', question:"Does WHOzTHEY? seem to have identified 'they' correctly?" },
+  ];
+
   function vote(layer, side) {
     const next = { ...votes, [layer]:side };
     setVotes(next);
-    if (layer==="claim"&&side==="no") onBadgeEarned("first_callbs");
-    if (layer==="claim"&&side==="yes") onBadgeEarned("first_believe");
+    if (layer==="claim"&&side==="call_bs") onBadgeEarned("first_callbs");
+    if (layer==="claim"&&side==="sounds_good") onBadgeEarned("first_believe");
     if (next.claim&&next.origin&&next.who) onBadgeEarned("debate_all3");
   }
+
   function handleSettle() {
     const msg = `They say "${query}" — WHOzTHEY? says ${answer.verdict||"DISPUTED"}. Argument settled. 👉 whoZthey.com`;
     setShareMsg(msg); setSettled(true); onBadgeEarned("settle_it");
     if (navigator.share) navigator.share({ title:"WHOzTHEY?", text:msg, url:"https://whozthey.com" }).catch(()=>{});
     else navigator.clipboard?.writeText(msg);
   }
+
   const p = persona ? PERSONAS[persona] : null;
+
   return (
     <div style={{ background:"#f8fafc", borderTop:"1px solid #e2e8f0", padding:"20px" }}>
       <div style={{ maxWidth:"700px", margin:"0 auto" }}>
         <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 14px" }}>⚡ Join the Debate</p>
         {layers.map(layer=>{
           const myVote = votes[layer.key];
-          const comm = COMMUNITY[layer.key];
+          const selected = options.find(o=>o.key===myVote);
           return (
             <div key={layer.key} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"14px 16px", marginBottom:"10px" }}>
               <p style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 4px" }}>{layer.label}</p>
               <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", margin:"0 0 12px" }}>{layer.question}</p>
               {!myVote ? (
-                <div style={{ display:"flex", gap:"8px" }}>
-                  <button onClick={()=>vote(layer.key,"yes")} style={{ flex:1, padding:"9px", background:"#f0fdf4", border:"1px solid #86efac", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#16a34a", cursor:"pointer" }}>✓ {layer.yes}</button>
-                  <button onClick={()=>vote(layer.key,"no")} style={{ flex:1, padding:"9px", background:"#fef2f2", border:"1px solid #fca5a5", borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#dc2626", cursor:"pointer" }}>✗ {layer.no}</button>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"8px" }}>
+                  {options.map(opt=>(
+                    <button key={opt.key} onClick={()=>vote(layer.key,opt.key)} style={{ padding:"9px 6px", background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:opt.color, cursor:"pointer" }}>
+                      {opt.emoji} {opt.label}
+                    </button>
+                  ))}
                 </div>
               ) : (
-                <div>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
-                    <span style={{ fontFamily:"system-ui", fontSize:"11px", color:myVote==="yes"?"#16a34a":"#dc2626", fontWeight:"700" }}>You: {myVote==="yes"?layer.yes:layer.no}{p?` · ${p.emoji} ${p.title}`:""}</span>
-                    <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8" }}>Community</span>
-                  </div>
-                  {[{pct:comm.yes,label:layer.yes,color:"#16a34a"},{pct:comm.no,label:layer.no,color:"#dc2626"}].map(bar=>(
-                    <div key={bar.label} style={{ marginBottom:"4px" }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"2px" }}>
-                        <span style={{ fontFamily:"system-ui", fontSize:"10px", color:bar.color }}>{bar.label}</span>
-                        <span style={{ fontFamily:"system-ui", fontSize:"10px", color:bar.color, fontWeight:"700" }}>{bar.pct}%</span>
-                      </div>
-                      <div style={{ background:"#f1f5f9", borderRadius:"4px", height:"6px", overflow:"hidden" }}>
-                        <div style={{ width:`${bar.pct}%`, height:"100%", background:bar.color, borderRadius:"4px", transition:"width 0.6s ease" }} />
-                      </div>
-                    </div>
-                  ))}
+                <div style={{ background:selected.bg, border:`1px solid ${selected.border}`, borderRadius:"6px", padding:"10px 12px" }}>
+                  <span style={{ fontFamily:"system-ui", fontSize:"12px", color:selected.color, fontWeight:"700" }}>You: {selected.label}{p?` · ${p.emoji} ${p.title}`:""}</span>
+                  <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", margin:"4px 0 0" }}>Community results will appear once real votes are connected.</p>
                 </div>
               )}
             </div>
@@ -1004,13 +1010,45 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 function WelcomeState({ onSearch }) {
-  const ex = ["cracking knuckles causes arthritis","you only use 10% of your brain","wait 30 min after eating to swim","carrots improve your eyesight","lightning never strikes the same place twice","hair grows back thicker after shaving"];
+  const [recentSearches, setRecentSearches] = useState([]);
+  const [loadingRecent, setLoadingRecent] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    fetchRecentSearches()
+      .then(rows => { if (alive) setRecentSearches(rows); })
+      .catch(() => { if (alive) setRecentSearches([]); })
+      .finally(() => { if (alive) setLoadingRecent(false); });
+    return () => { alive = false; };
+  }, []);
+
   return (
     <div style={{ padding:"40px 20px", textAlign:"center" }}>
       <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", color:"#475569", margin:"0 0 6px" }}>Type any claim above and hit <strong>WHOzTHEY?</strong></p>
       <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", margin:"0 0 20px" }}>We'll tell you who "they" really are, where it started, and whether it's true.</p>
-      <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center", maxWidth:"600px", margin:"0 auto" }}>
-        {ex.map((e,i)=><button key={i} onClick={()=>onSearch(e)} style={{ padding:"6px 14px", background:"#f1f5f9", borderRadius:"20px", fontFamily:"system-ui", fontSize:"12px", color:"#475569", border:"1px solid #e2e8f0", cursor:"pointer" }}>They say {e}…</button>)}
+
+      <div style={{ maxWidth:"640px", margin:"0 auto" }}>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 12px" }}>
+          Recent WHOzTHEY? Searches
+        </p>
+
+        {loadingRecent && (
+          <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#94a3b8", margin:0 }}>Loading recent searches…</p>
+        )}
+
+        {!loadingRecent && recentSearches.length === 0 && (
+          <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#94a3b8", margin:0 }}>No recent searches yet. Be the first to ask WHOzTHEY?</p>
+        )}
+
+        {!loadingRecent && recentSearches.length > 0 && (
+          <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center" }}>
+            {recentSearches.map((row,i)=>(
+              <button key={row.id || `${row.raw_claim}-${i}`} onClick={()=>onSearch(row.raw_claim || row.display_claim)} style={{ padding:"6px 14px", background:"#f1f5f9", borderRadius:"20px", fontFamily:"system-ui", fontSize:"12px", color:"#475569", border:"1px solid #e2e8f0", cursor:"pointer" }}>
+                They say {row.raw_claim || row.display_claim}…
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
