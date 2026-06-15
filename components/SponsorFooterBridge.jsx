@@ -33,7 +33,7 @@ const FALLBACK_SPONSOR_CARDS = [
     teaser: 'They are giving golfers $75 ShipSticks Vouchers!',
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
     cta: 'Claim Your Voucher',
-    ctaUrl: 'https://whozthey.com',
+    ctaUrl: 'https://armsreach-global360.manus.space/',
     accent: '#0284c7',
   },
   {
@@ -136,42 +136,29 @@ export default function SponsorFooterBridge() {
   return (
     <>
       {selectedSponsor && (
-        <section style={{ position: 'fixed', top: 112, left: 0, right: 0, bottom: 88, zIndex: 55, overflow: 'auto', background: '#fff', borderTop: '3px solid #e2e8f0', boxShadow: '0 8px 24px rgba(15,23,42,0.18)' }}>
-          <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '20px 24px' }}>
-            <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-              <div>
-                <p style={{ fontFamily: 'system-ui', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: selectedSponsor.accent || '#dc2626', margin: '0 0 4px' }}>
+        <section style={{ position: 'fixed', top: 112, left: 0, right: 0, bottom: 88, zIndex: 55, overflow: 'hidden', background: '#fff', borderTop: '3px solid #e2e8f0', boxShadow: '0 8px 24px rgba(15,23,42,0.18)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 14px', flexShrink: 0 }}>
+            <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontFamily: 'system-ui', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: selectedSponsor.accent || '#dc2626', margin: '0 0 2px' }}>
                   SPONSORED - {selectedSponsor.sponsor}
                 </p>
-                <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>
+                <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <span style={{ color: '#dc2626' }}>They</span>{selectedSponsor.teaser?.startsWith('They') ? selectedSponsor.teaser.slice(4) : ` ${selectedSponsor.teaser}`}
                 </h2>
               </div>
-              <button onClick={() => setSelectedSponsor(null)} style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 4, color: '#64748b', fontSize: 11, fontFamily: 'system-ui', padding: '3px 10px', cursor: 'pointer', flexShrink: 0 }}>
+              <button onClick={() => setSelectedSponsor(null)} style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 4, color: '#64748b', fontSize: 11, fontFamily: 'system-ui', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>
                 Close x
               </button>
             </div>
           </div>
 
-          <div style={{ maxWidth: 760, margin: '0 auto', padding: 24 }}>
-            <div style={{ background: '#0f172a', borderLeft: `4px solid ${selectedSponsor.accent || '#dc2626'}`, borderRadius: 10, padding: 22, marginBottom: 18 }}>
-              <p style={{ fontFamily: "'Georgia',serif", fontSize: 18, color: '#f8fafc', lineHeight: 1.6, margin: '0 0 16px' }}>
-                {selectedSponsor.body}
-              </p>
-              <a href={selectedSponsor.ctaUrl || 'https://whozthey.com'} target="_blank" rel="noopener" style={{ display: 'inline-block', padding: '11px 18px', background: selectedSponsor.accent || '#dc2626', borderRadius: 7, color: '#fff', textDecoration: 'none', fontFamily: 'system-ui', fontSize: 13, fontWeight: 700 }}>
-                {selectedSponsor.cta || 'Learn More'}
-              </a>
-            </div>
-
-            <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '16px 18px' }}>
-              <h3 style={{ fontFamily: 'system-ui', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', margin: '0 0 8px' }}>
-                Special Offer
-              </h3>
-              <p style={{ fontFamily: 'system-ui', fontSize: 14, color: '#475569', lineHeight: 1.7, margin: 0 }}>
-                This is the first Neon-powered sponsor offer panel. Next, this can become a coupon, voucher, appointment, quote request, or opt-in template.
-              </p>
-            </div>
-          </div>
+          <iframe
+            title={`${selectedSponsor.sponsor} sponsored offer`}
+            src={selectedSponsor.ctaUrl || 'https://armsreach-global360.manus.space/'}
+            style={{ width: '100%', flex: 1, border: 'none', background: '#fff' }}
+            allow="clipboard-write; payment; fullscreen"
+          />
         </section>
       )}
 
