@@ -28,7 +28,7 @@ const FALLBACK_SPONSOR_CARDS = [
     id: 'fallback-tpc',
     isSponsor: true,
     sponsor: 'Travel Protection Club',
-    badge: 'THEY HOOK',
+    badge: 'SPONSORED',
     badgeColor: '#0284c7',
     teaser: 'They are giving golfers $75 ShipSticks Vouchers!',
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
@@ -40,7 +40,7 @@ const FALLBACK_SPONSOR_CARDS = [
     id: 'fallback-yatstats',
     isSponsor: true,
     sponsor: 'YatStats',
-    badge: 'THEY HOOK',
+    badge: 'SPONSORED',
     badgeColor: '#16a34a',
     teaser: 'They are helping high school baseball teams raise money!',
     body: 'YAT?STATS turns alumni tracking, nostalgia, and local sports pride into a fundraising and fan-engagement platform for schools and booster programs.',
@@ -141,7 +141,7 @@ export default function SponsorFooterBridge() {
             <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
               <div>
                 <p style={{ fontFamily: 'system-ui', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: selectedSponsor.accent || '#dc2626', margin: '0 0 4px' }}>
-                  THEY HOOK - {selectedSponsor.sponsor}
+                  SPONSORED - {selectedSponsor.sponsor}
                 </p>
                 <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>
                   <span style={{ color: '#dc2626' }}>They</span>{selectedSponsor.teaser?.startsWith('They') ? selectedSponsor.teaser.slice(4) : ` ${selectedSponsor.teaser}`}
@@ -165,10 +165,10 @@ export default function SponsorFooterBridge() {
 
             <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '16px 18px' }}>
               <h3 style={{ fontFamily: 'system-ui', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#64748b', margin: '0 0 8px' }}>
-                Hook - Story - Offer
+                Special Offer
               </h3>
               <p style={{ fontFamily: 'system-ui', fontSize: 14, color: '#475569', lineHeight: 1.7, margin: 0 }}>
-                This is the first Neon-powered THEY Hook landing panel. Next, this can become a coupon, voucher, appointment, quote request, or opt-in template.
+                This is the first Neon-powered sponsor offer panel. Next, this can become a coupon, voucher, appointment, quote request, or opt-in template.
               </p>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function SponsorFooterBridge() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px' }}>
             <button onClick={() => move(-1)} aria-label="Previous footer item" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 22, padding: '0 8px', lineHeight: 1, fontWeight: 300 }}>‹</button>
             <span style={{ fontFamily: 'system-ui', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#fff' }}>
-              {item.isSponsor ? '★ THEY HOOK' : '★ FUN FACTS'}
+              {item.isSponsor ? '★ SPONSORED' : '★ FUN FACTS'}
             </span>
             <button onClick={() => move(1)} aria-label="Next footer item" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 22, padding: '0 8px', lineHeight: 1, fontWeight: 300 }}>›</button>
           </div>
