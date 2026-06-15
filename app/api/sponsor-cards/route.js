@@ -6,8 +6,8 @@ const DEFAULT_SPONSOR_CARDS = [
   {
     sponsorName: 'Travel Protection Club',
     contactName: 'Pete DeLuca',
-    websiteUrl: 'https://whozthey.com',
-    ctaUrl: 'https://whozthey.com',
+    websiteUrl: 'https://armsreach-global360.manus.space/',
+    ctaUrl: 'https://armsreach-global360.manus.space/',
     teaser: 'They are giving golfers $75 ShipSticks Vouchers!',
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
     ctaLabel: 'Claim Your Voucher →',
@@ -24,8 +24,8 @@ const DEFAULT_SPONSOR_CARDS = [
   },
   {
     sponsorName: 'H2Yo!',
-    websiteUrl: 'https://whozthey.com',
-    ctaUrl: 'https://whozthey.com',
+    websiteUrl: 'https://arms-reach-digital-agency.github.io/h2yo/#lead-capture',
+    ctaUrl: 'https://arms-reach-digital-agency.github.io/h2yo/#lead-capture',
     teaser: 'They have premium branded water that works as hard as you do!',
     body: 'H2Yo! puts your brand in people’s hands with premium hydration built for events, teams, businesses, and community campaigns.',
     ctaLabel: 'Get H2Yo! →',
@@ -111,27 +111,54 @@ async function ensureSponsorTables(sql) {
 
 async function seedDefaultSponsors(sql) {
   for (const card of DEFAULT_SPONSOR_CARDS) {
-    const sponsorRows = await sql`
-      insert into sponsors (sponsor_name, contact_name, website_url, cta_url, status)
-      values (${card.sponsorName}, ${card.contactName || null}, ${card.websiteUrl || null}, ${card.ctaUrl || null}, 'active')
-      on conflict do nothing
-      returning id
-    `
-
-    const existingSponsor = sponsorRows[0] || (await sql`
+    let existingSponsor = (await sql`
       select id from sponsors where sponsor_name = ${card.sponsorName} order by created_at asc limit 1
     `)[0]
 
+    if (!existingSponsor?.id) {
+      existingSponsor = (await sql`
+        insert into sponsors (sponsor_name, contact_name, website_url, cta_url, status)
+        values (${card.sponsorName}, ${card.contactName || null}, ${card.websiteUrl || null}, ${card.ctaUrl || null}, 'active')
+        returning id
+      `)[0]
+    }
+
     if (!existingSponsor?.id) continue
 
+    await sql`
+      update sponsors
+      set
+        contact_name = coalesce(contact_name, ${card.contactName || null}),
+        website_url = ${card.websiteUrl || null},
+        cta_url = ${card.ctaUrl || null},
+        status = 'active',
+        updated_at = now()
+      where sponsor_name = ${card.sponsorName}
+    `
+
     const existingCards = await sql`
-      select id from sponsor_cards where sponsor_id = ${existingSponsor.id} limit 1
+      select id from sponsor_cards
+      where sponsor_id in (select id from sponsors where sponsor_name = ${card.sponsorName})
+      order by created_at asc
     `
 
     if (existingCards.length === 0) {
       await sql`
         insert into sponsor_cards (sponsor_id, teaser, body, cta_label, cta_url, accent_color, is_active)
         values (${existingSponsor.id}, ${card.teaser}, ${card.body}, ${card.ctaLabel}, ${card.ctaUrl}, ${card.accentColor}, true)
+      `
+    } else {
+      await sql`
+        update sponsor_cards
+        set
+          teaser = ${card.teaser},
+          body = ${card.body},
+          cta_label = ${card.ctaLabel},
+          cta_url = ${card.ctaUrl},
+          accent_color = ${card.accentColor},
+          is_active = true,
+          updated_at = now()
+        where sponsor_id in (select id from sponsors where sponsor_name = ${card.sponsorName})
       `
     }
   }
