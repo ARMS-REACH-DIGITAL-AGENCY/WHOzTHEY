@@ -2,6 +2,16 @@ import { neon } from '@neondatabase/serverless'
 
 let sqlClient = null
 
+const BLOCKED_WORD_PATTERNS = [
+  /f+\W*u+\W*c+\W*k+/i,
+  /s+\W*h+\W*i+\W*t+/i,
+  /a+\W*s+\W*s+\W*h+\W*o+\W*l+\W*e+/i,
+  /b+\W*i+\W*t+\W*c+\W*h+/i,
+  /c+\W*u+\W*n+\W*t+/i,
+  /d+\W*i+\W*c+\W*k+/i,
+  /p+\W*u+\W*s+\W*s+\W*y+/i,
+]
+
 function getDatabaseUrl() {
   return (
     process.env.DATABASE_URL ||
@@ -27,6 +37,11 @@ function getSql() {
   return sqlClient
 }
 
+function isSafeRecentSearch(row) {
+  const claim = `${row?.raw_claim || ''} ${row?.normalized_claim || ''}`
+  return !BLOCKED_WORD_PATTERNS.some((pattern) => pattern.test(claim))
+}
+
 export async function GET() {
   try {
     const sql = getSql()
@@ -42,10 +57,11 @@ export async function GET() {
       where raw_claim is not null
         and trim(raw_claim) <> ''
       order by normalized_claim, created_at desc
-      limit 12
+      limit 50
     `
 
     const searches = rows
+      .filter(isSafeRecentSearch)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 8)
 
