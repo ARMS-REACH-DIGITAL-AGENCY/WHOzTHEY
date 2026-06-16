@@ -130,27 +130,18 @@ export default function SponsorFooterBridge() {
   return (
     <>
       {selectedSponsor && (
-        <section style={{ position: 'fixed', top: 112, left: 0, right: 0, bottom: 88, zIndex: 55, overflow: 'hidden', background: '#fff', borderTop: '3px solid #e2e8f0', boxShadow: '0 8px 24px rgba(15,23,42,0.18)', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '12px 14px', flexShrink: 0 }}>
-            <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-              <div style={{ minWidth: 0 }}>
-                <p style={{ fontFamily: 'system-ui', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: selectedSponsor.accent || '#dc2626', margin: '0 0 2px' }}>
-                  SPONSORED - {selectedSponsor.sponsor}
-                </p>
-                <h2 style={{ fontFamily: "'Georgia',serif", fontSize: 16, fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.25, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  <span style={{ color: '#dc2626' }}>They</span>{selectedSponsor.teaser?.startsWith('They') ? selectedSponsor.teaser.slice(4) : ` ${selectedSponsor.teaser}`}
-                </h2>
-              </div>
-              <button onClick={() => setSelectedSponsor(null)} style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 4, color: '#64748b', fontSize: 11, fontFamily: 'system-ui', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>
-                Close x
-              </button>
-            </div>
-          </div>
-
+        <section style={{ position: 'fixed', top: 112, left: 0, right: 0, bottom: 88, zIndex: 55, overflow: 'hidden', background: '#fff', borderTop: '2px solid #e2e8f0', boxShadow: '0 8px 24px rgba(15,23,42,0.18)' }}>
+          <button
+            onClick={() => setSelectedSponsor(null)}
+            aria-label="Close sponsor"
+            style={{ position: 'absolute', top: 8, right: 10, zIndex: 1, background: 'rgba(15,23,42,0.55)', border: 'none', borderRadius: '50%', color: '#fff', fontSize: 16, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+          >
+            ×
+          </button>
           <iframe
             title={`${selectedSponsor.sponsor} sponsored offer`}
             src={selectedSponsor.ctaUrl || 'https://armsreach-global360.manus.space/'}
-            style={{ width: '100%', flex: 1, border: 'none', background: '#fff' }}
+            style={{ width: '100%', height: '100%', border: 'none', background: '#fff', display: 'block' }}
             allow="clipboard-write; fullscreen"
           />
         </section>
