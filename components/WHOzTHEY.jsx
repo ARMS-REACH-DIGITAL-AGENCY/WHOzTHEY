@@ -930,6 +930,12 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
   const [submitHover, setSubmitHover] = useState(false);
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
+
+  useEffect(() => {
+    function onSetClaim(e) { if (e.detail?.claim) setClaim(e.detail.claim); }
+    window.addEventListener('whozthey:setclaim', onSetClaim);
+    return () => window.removeEventListener('whozthey:setclaim', onSetClaim);
+  }, []);
   return (
     <header style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
 

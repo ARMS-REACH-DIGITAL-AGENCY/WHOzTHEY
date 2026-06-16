@@ -66,6 +66,7 @@ function buildCarousel(sponsorCards) {
 }
 
 function runWhozTheySearch(claim) {
+  window.dispatchEvent(new CustomEvent('whozthey:setclaim', { detail: { claim } }))
   window.dispatchEvent(new CustomEvent('whozthey:search', { detail: { claim } }))
   window.scrollTo({ top: 0, behavior: 'smooth' })
   return true
@@ -120,6 +121,7 @@ export default function SponsorFooterBridge() {
       return
     }
 
+    setSelectedSponsor(null)
     runWhozTheySearch(item.teaser)
   }
 
