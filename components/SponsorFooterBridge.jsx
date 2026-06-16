@@ -66,16 +66,8 @@ function buildCarousel(sponsorCards) {
 }
 
 function runWhozTheySearch(claim) {
-  const input = document.querySelector('#whozthey-shell input[aria-label="Search a claim"]')
-
-  if (!input) return false
-
-  const valueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set
-  valueSetter?.call(input, claim)
-  input.dispatchEvent(new Event('input', { bubbles: true }))
-  input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }))
+  window.dispatchEvent(new CustomEvent('whozthey:search', { detail: { claim } }))
   window.scrollTo({ top: 0, behavior: 'smooth' })
-
   return true
 }
 

@@ -1106,6 +1106,15 @@ export default function WHOzTHEY() {
   const [searchCount, setSearchCount] = useState(0);
   const [sessionId, setSessionId]     = useState(null);
   const answerRef                     = useRef(null);
+  const handleSearchRef               = useRef(null);
+
+  useEffect(() => {
+    function onFooterSearch(e) {
+      if (e.detail?.claim) handleSearchRef.current?.(e.detail.claim);
+    }
+    window.addEventListener('whozthey:search', onFooterSearch);
+    return () => window.removeEventListener('whozthey:search', onFooterSearch);
+  }, []);
 
   useEffect(() => {
     const key = "whozthey_session_id";
@@ -1198,7 +1207,7 @@ export default function WHOzTHEY() {
   }
 
   // Quiz is now opt-in only — no longer the landing screen
-
+  handleSearchRef.current = handleSearch;
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
