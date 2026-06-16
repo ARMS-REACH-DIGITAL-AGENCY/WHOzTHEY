@@ -1010,6 +1010,36 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 
+function SearchPill({ claim, onSearch }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={() => onSearch(claim)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display:"inline-flex", alignItems:"flex-start", gap:"5px",
+        padding:"10px 18px",
+        background: hovered ? "#0f172a" : "#ffffff",
+        borderRadius:"999px",
+        border: `1.5px solid ${hovered ? "#0f172a" : "#e2e8f0"}`,
+        boxShadow: hovered ? "0 6px 18px rgba(0,0,0,0.18)" : "0 1px 4px rgba(0,0,0,0.07)",
+        cursor:"pointer",
+        fontFamily:"system-ui",
+        fontSize:"13px",
+        lineHeight:"1.45",
+        color: hovered ? "#f1f5f9" : "#334155",
+        transition:"background 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, color 0.15s ease",
+        maxWidth:"340px",
+        textAlign:"left",
+      }}
+    >
+      <span style={{ color: hovered ? "#f87171" : "#dc2626", fontWeight:"700", flexShrink:0, paddingTop:"1px" }}>They say</span>
+      <span>{" "}{claim}…</span>
+    </button>
+  );
+}
+
 function WelcomeState({ onSearch }) {
   const [recentSearches, setRecentSearches] = useState([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
@@ -1024,30 +1054,82 @@ function WelcomeState({ onSearch }) {
   }, []);
 
   return (
-    <div style={{ padding:"40px 20px", textAlign:"center" }}>
-      <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", color:"#475569", margin:"0 0 6px" }}>Type any claim above and hit <strong>WHOzTHEY?</strong></p>
-      <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", margin:"0 0 20px" }}>We'll tell you who "they" really are, where it started, and whether it's true.</p>
+    <div style={{ paddingBottom:"60px" }}>
 
-      <div style={{ maxWidth:"640px", margin:"0 auto" }}>
-        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 12px" }}>
-          Recent WHOzTHEY? Searches
+      {/* ── Hero Welcome ── */}
+      <div style={{
+        textAlign:"center",
+        padding:"48px 24px 44px",
+        background:"linear-gradient(170deg, #0f172a 0%, #1e293b 85%, #f8fafc 100%)",
+        borderBottom:"none",
+      }}>
+        <div style={{ display:"flex", justifyContent:"center", marginBottom:"22px" }}>
+          <Wordmark size={42} />
+        </div>
+        <h2 style={{
+          fontFamily:"'Georgia',serif",
+          fontSize:"clamp(22px, 5vw, 30px)",
+          fontWeight:"700",
+          color:"#f1f5f9",
+          margin:"0 0 14px",
+          lineHeight:1.25,
+          letterSpacing:"-0.01em",
+        }}>
+          What did{" "}
+          <span style={{ color:"#dc2626" }}>THEY</span>{" "}
+          say?
+        </h2>
+        <p style={{
+          fontFamily:"system-ui",
+          fontSize:"clamp(13px, 3vw, 15px)",
+          color:"#94a3b8",
+          margin:"0 auto",
+          maxWidth:"400px",
+          lineHeight:1.7,
+        }}>
+          Type any claim above and hit{" "}
+          <strong style={{ color:"#cbd5e1", fontWeight:"600" }}>WHOzTHEY?</strong>
+          {" "}— we'll tell you who <em>"they"</em> really are,{" "}
+          where it started, and whether it's true.
         </p>
+      </div>
+
+      {/* ── Trending Searches ── */}
+      <div style={{ maxWidth:"720px", margin:"0 auto", padding:"36px 20px 0" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"14px", marginBottom:"26px" }}>
+          <div style={{ flex:1, height:"1px", background:"#e2e8f0" }} />
+          <span style={{
+            fontFamily:"system-ui", fontSize:"10px", fontWeight:"800",
+            letterSpacing:"0.16em", textTransform:"uppercase",
+            color:"#dc2626", whiteSpace:"nowrap",
+          }}>
+            🔥 Trending Searches
+          </span>
+          <div style={{ flex:1, height:"1px", background:"#e2e8f0" }} />
+        </div>
 
         {loadingRecent && (
-          <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#94a3b8", margin:0 }}>Loading recent searches…</p>
+          <div style={{ display:"flex", justifyContent:"center", padding:"28px" }}>
+            <div style={{
+              width:"22px", height:"22px",
+              border:"3px solid #e2e8f0", borderTopColor:"#dc2626",
+              borderRadius:"50%", animation:"spin 0.7s linear infinite",
+            }} />
+          </div>
         )}
 
         {!loadingRecent && recentSearches.length === 0 && (
-          <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#94a3b8", margin:0 }}>No recent searches yet. Be the first to ask WHOzTHEY?</p>
+          <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", margin:0, textAlign:"center" }}>
+            No recent searches yet. Be the first to ask WHOzTHEY?
+          </p>
         )}
 
         {!loadingRecent && recentSearches.length > 0 && (
-          <div style={{ display:"flex", flexWrap:"wrap", gap:"8px", justifyContent:"center" }}>
-            {recentSearches.map((row,i)=>(
-              <button key={row.id || `${row.raw_claim}-${i}`} onClick={()=>onSearch(row.raw_claim || row.display_claim)} style={{ padding:"6px 14px", background:"#f1f5f9", borderRadius:"20px", fontFamily:"system-ui", fontSize:"12px", color:"#475569", border:"1px solid #e2e8f0", cursor:"pointer" }}>
-                They say {row.raw_claim || row.display_claim}…
-              </button>
-            ))}
+          <div style={{ display:"flex", flexWrap:"wrap", gap:"10px", justifyContent:"center" }}>
+            {recentSearches.map((row, i) => {
+              const claim = row.raw_claim || row.display_claim;
+              return <SearchPill key={row.id || `${claim}-${i}`} claim={claim} onSearch={onSearch} />;
+            })}
           </div>
         )}
       </div>
