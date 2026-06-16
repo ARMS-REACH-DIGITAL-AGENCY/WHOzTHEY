@@ -931,11 +931,6 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
 
-  useEffect(() => {
-    function onSetClaim(e) { if (e.detail?.claim) setClaim(e.detail.claim); }
-    window.addEventListener('whozthey:setclaim', onSetClaim);
-    return () => window.removeEventListener('whozthey:setclaim', onSetClaim);
-  }, []);
   return (
     <header style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
 
@@ -1115,14 +1110,6 @@ export default function WHOzTHEY() {
   const handleSearchRef               = useRef(null);
 
   useEffect(() => {
-    function onFooterSearch(e) {
-      if (e.detail?.claim) handleSearchRef.current?.(e.detail.claim);
-    }
-    window.addEventListener('whozthey:search', onFooterSearch);
-    return () => window.removeEventListener('whozthey:search', onFooterSearch);
-  }, []);
-
-  useEffect(() => {
     const key = "whozthey_session_id";
     let stored = window.localStorage.getItem(key);
     if (!stored) {
@@ -1212,8 +1199,11 @@ export default function WHOzTHEY() {
     setLoading(false);
   }
 
-  // Quiz is now opt-in only — no longer the landing screen
+  // Keep ref and window global current on every render so external callers
+  // (SponsorFooterBridge) always invoke the latest closure.
   handleSearchRef.current = handleSearch;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { window.__whoztheySearch = handleSearch; });
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
