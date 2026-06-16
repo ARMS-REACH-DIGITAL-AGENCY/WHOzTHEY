@@ -1014,8 +1014,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 function WelcomeState({ onSearch }) {
   const [recentSearches, setRecentSearches] = useState([]);
   const [loadingRecent, setLoadingRecent] = useState(true);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [visible, setVisible] = useState(true);
+  const [hoveredIdx, setHoveredIdx] = useState(null);
 
   useEffect(() => {
     let alive = true;
@@ -1026,118 +1025,108 @@ function WelcomeState({ onSearch }) {
     return () => { alive = false; };
   }, []);
 
-  useEffect(() => {
-    if (recentSearches.length <= 1) return;
-    const t = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setCurrentIdx(i => (i + 1) % recentSearches.length);
-        setVisible(true);
-      }, 450);
-    }, 4000);
-    return () => clearInterval(t);
-  }, [recentSearches.length]);
-
-  const currentSearch = recentSearches[currentIdx];
-  const currentClaim = currentSearch ? (currentSearch.raw_claim || currentSearch.display_claim) : null;
-
   return (
-    <div style={{ paddingBottom:"60px" }}>
-      <div style={{
+    <div style={{ background:"#ffffff", padding:"28px 20px 80px" }}>
+
+      {/* Tagline */}
+      <p style={{
+        fontFamily:"system-ui",
+        fontSize:"12px",
+        color:"#94a3b8",
         textAlign:"center",
-        padding:"18px 24px 48px",
-        background:"linear-gradient(170deg, #0f172a 0%, #1e293b 80%, #f8fafc 100%)",
+        margin:"0 0 28px",
+        letterSpacing:"0.02em",
+      }}>
+        Type a claim — we'll find out who <strong style={{ color:"#64748b", fontWeight:"600" }}>they</strong> really are
+      </p>
+
+      {/* Two-column layout */}
+      <div style={{
+        maxWidth:"680px",
+        margin:"0 auto",
+        display:"flex",
+        alignItems:"stretch",
+        gap:"0",
       }}>
 
-        {/* Tagline above logo */}
-        <p style={{
-          fontFamily:"system-ui",
-          fontSize:"11px",
-          color:"#64748b",
-          margin:"0 0 22px",
-          letterSpacing:"0.03em",
+        {/* Left: Logo */}
+        <div style={{
+          flex:"0 0 auto",
+          display:"flex",
+          alignItems:"center",
+          justifyContent:"center",
+          paddingRight:"28px",
         }}>
-          Type a claim — we'll tell you who <strong style={{ color:"#94a3b8", fontWeight:"600" }}>they</strong> really are
-        </p>
-
-        {/* Logo */}
-        <div style={{ display:"flex", justifyContent:"center", marginBottom:"16px" }}>
-          <Wordmark size={42} />
+          <Wordmark size={40} />
         </div>
 
-        {/* Cycling speech bubble */}
-        <div style={{ display:"inline-flex", flexDirection:"column", alignItems:"center" }}>
-          <div style={{ position:"relative" }}>
-            {/* Triangle pointer pointing up at the logo */}
-            <div style={{
-              width:0, height:0,
-              borderLeft:"8px solid transparent",
-              borderRight:"8px solid transparent",
-              borderBottom:"8px solid #1e293b",
-              margin:"0 auto 0",
-            }} />
-            <div
-              onClick={() => currentClaim && onSearch(currentClaim)}
-              style={{
-                background:"#1e293b",
-                border:"1.5px solid #334155",
-                borderRadius:"14px",
-                padding:"14px 22px",
-                width:"280px",
-                minHeight:"58px",
-                display:"flex",
-                alignItems:"center",
-                justifyContent:"center",
-                boxShadow:"0 6px 24px rgba(0,0,0,0.45)",
-                cursor: currentClaim ? "pointer" : "default",
-              }}
-            >
-              {loadingRecent && (
-                <div style={{ width:"18px", height:"18px", border:"2px solid #334155", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
-              )}
+        {/* Vertical divider */}
+        <div style={{ width:"1px", background:"#e2e8f0", flexShrink:0 }} />
 
-              {!loadingRecent && !currentClaim && (
-                <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#475569", margin:0 }}>
-                  Be the first to ask WHOzTHEY?
-                </p>
-              )}
+        {/* Right: Trending list */}
+        <div style={{ flex:1, paddingLeft:"24px" }}>
+          <p style={{
+            fontFamily:"system-ui",
+            fontSize:"10px",
+            fontWeight:"800",
+            letterSpacing:"0.14em",
+            textTransform:"uppercase",
+            color:"#dc2626",
+            margin:"0 0 12px",
+          }}>
+            🔥 Trending Searches
+          </p>
 
-              {!loadingRecent && currentClaim && (
-                <p style={{
-                  fontFamily:"'Georgia',serif",
-                  fontSize:"13px",
-                  fontWeight:"600",
-                  color:"#f1f5f9",
-                  margin:0,
-                  lineHeight:1.45,
-                  textAlign:"center",
-                  opacity: visible ? 1 : 0,
-                  transition:"opacity 0.4s ease",
-                }}>
-                  <span style={{ color:"#dc2626" }}>They say</span>{" "}{currentClaim}…
-                </p>
-              )}
+          {loadingRecent && (
+            <div style={{ padding:"16px 0" }}>
+              <div style={{ width:"18px", height:"18px", border:"2px solid #e2e8f0", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
             </div>
-          </div>
+          )}
+
+          {!loadingRecent && recentSearches.length === 0 && (
+            <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", margin:0 }}>
+              No recent searches yet. Be the first!
+            </p>
+          )}
 
           {!loadingRecent && recentSearches.length > 0 && (
-            <p style={{
-              fontFamily:"system-ui",
-              fontSize:"9px",
-              fontWeight:"700",
-              letterSpacing:"0.14em",
-              textTransform:"uppercase",
-              color:"#475569",
-              margin:"10px 0 0",
-            }}>
-              🔥 Trending · tap to search
-            </p>
+            <div style={{ maxHeight:"320px", overflowY:"auto" }}>
+              {recentSearches.map((row, i) => {
+                const claim = row.raw_claim || row.display_claim;
+                return (
+                  <button
+                    key={row.id || `${claim}-${i}`}
+                    onClick={() => onSearch(claim)}
+                    onMouseEnter={() => setHoveredIdx(i)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    style={{
+                      display:"block",
+                      width:"100%",
+                      textAlign:"left",
+                      background: hoveredIdx === i ? "#f8fafc" : "transparent",
+                      border:"none",
+                      borderBottom:"1px solid #f1f5f9",
+                      padding:"10px 8px",
+                      cursor:"pointer",
+                      fontFamily:"'Georgia',serif",
+                      fontSize:"14px",
+                      color:"#0f172a",
+                      lineHeight:1.4,
+                      transition:"background 0.1s ease",
+                    }}
+                  >
+                    <span style={{ color:"#dc2626", fontWeight:"700" }}>They say</span>{" "}{claim}…
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>
     </div>
   );
 }
+
 
 function LoadingAnswer({ query, stage }) {
   const [dot, setDot] = useState(".");
