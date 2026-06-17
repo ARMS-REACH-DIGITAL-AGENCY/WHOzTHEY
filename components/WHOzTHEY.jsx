@@ -958,49 +958,49 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
     <header style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
 
       {/* Row 1: "Type a claim..." + icons */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"10px" }}>
-        <span style={{ fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#f8fafc", letterSpacing:"-0.2px", lineHeight:1.25 }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"8px" }}>
+        <span style={{ fontFamily:"'Georgia',serif", fontSize:"12px", fontWeight:"700", color:"#f8fafc", letterSpacing:"-0.2px", lineHeight:1.25 }}>
           Type a claim below to see who <span style={{ color:"#dc2626" }}>"THEY"</span> is.
         </span>
-        <div style={{ display:"flex", alignItems:"center", gap:"20px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
           {/* Share */}
           <button onClick={()=>{ if(navigator.share) navigator.share({title:"WHOzTHEY?",url:"https://whozthey.com"}); else navigator.clipboard?.writeText("https://whozthey.com"); }} style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            <span style={{ fontFamily:"system-ui", fontSize:"8px", color:"#64748b", letterSpacing:"0.04em" }}>Share</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Share</span>
           </button>
           {/* Reset */}
           <button onClick={()=>{ setClaim(""); onResetSearch?.(); }} title="Reset search" aria-label="Reset search" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
-            <span style={{ fontFamily:"system-ui", fontSize:"8px", color:"#64748b", letterSpacing:"0.04em" }}>Reset</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Reset</span>
           </button>
           {/* Store */}
           <button onClick={onStoreClick} style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            <span style={{ fontFamily:"system-ui", fontSize:"8px", color:"#64748b", letterSpacing:"0.04em" }}>Store</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Store</span>
           </button>
           {/* Sign In / Profile */}
           <button onClick={user ? onLoginRequest : onLoginRequest} style={{ background:"none", border:"none", cursor:"pointer", color: p ? p.color : "#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
             {p
-              ? <span style={{ fontSize:"18px", lineHeight:1 }}>{p.emoji}</span>
-              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              ? <span style={{ fontSize:"15px", lineHeight:1 }}>{p.emoji}</span>
+              : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             }
-            <span style={{ fontFamily:"system-ui", fontSize:"8px", color:"#64748b", letterSpacing:"0.04em" }}>{user ? user.name.split(" ")[0] : "Sign In"}</span>
+            <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>{user ? user.name.split(" ")[0] : "Sign In"}</span>
           </button>
         </div>
       </div>
 
       {/* Row 2: custom search input + WHOzTHEY submit button (same card treatment as the footer carousel row) */}
       <div style={{ padding:"6px 14px 10px" }}>
-        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 12px", display:"flex", alignItems:"center", gap:"10px", boxSizing:"border-box" }}>
-          <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"4px 8px" }}>
-            <span style={{ fontFamily:"'Georgia',serif", fontStyle:"italic", fontWeight:"700", color:"#dc2626", fontSize:"15px", whiteSpace:"nowrap" }}>"THEY" say,</span>
+        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"6px 10px", display:"flex", alignItems:"center", gap:"8px", boxSizing:"border-box" }}>
+          <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"3px 6px" }}>
+            <span style={{ fontFamily:"'Georgia',serif", fontStyle:"italic", fontWeight:"700", color:"#dc2626", fontSize:"13px", whiteSpace:"nowrap" }}>"THEY" say,</span>
             <input
               type="text" value={claim}
               autoFocus
               onChange={e=>setClaim(e.target.value)}
               onKeyDown={e=>e.key==="Enter"&&submit()}
               aria-label="Search a claim"
-              style={{ flex:1, minWidth:"100px", padding:0, background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"15px", color:"#f8fafc", caretColor:"#f8fafc" }}
+              style={{ flex:1, minWidth:"100px", padding:0, background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"13px", color:"#f8fafc", caretColor:"#f8fafc" }}
             />
           </div>
           <button
@@ -1014,10 +1014,10 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               position:"relative",
               overflow:"hidden",
               flexShrink:0,
-              padding:"7px 9px",
+              padding:"5px 7px",
               background:submitHover&&!loading&&claim.trim()?"#dc2626":"#0f172a",
               border:submitHover&&!loading&&claim.trim()?"1px solid #fca5a5":"1px solid #475569",
-              borderRadius:"9px",
+              borderRadius:"8px",
               cursor:loading?"wait":claim.trim()?"pointer":"not-allowed",
               opacity:loading||!claim.trim()?0.55:1,
               display:"flex",
@@ -1028,8 +1028,8 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
             }}
           >
             {loading
-              ? <span style={{ width:"20px", height:"20px", border:"2px solid #475569", borderTopColor:"transparent", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" }} />
-              : <img src={submitHover&&!loading&&claim.trim() ? "/logo_blue_z.png" : "/logo.png"} alt="WHOzTHEY?" style={{ height:"36px", width:"auto", display:"block" }} />
+              ? <span style={{ width:"16px", height:"16px", border:"2px solid #475569", borderTopColor:"transparent", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" }} />
+              : <img src={submitHover&&!loading&&claim.trim() ? "/logo_blue_z.png" : "/logo.png"} alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
             }
           </button>
         </div>
