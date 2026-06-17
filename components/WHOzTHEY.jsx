@@ -93,6 +93,11 @@ const SEED_FACTS = [
   "Humans and dinosaurs never coexisted","Your tongue has specific zones for different tastes",
 ];
 
+// Only DB-backed sponsor cards have real uuid ids; the hardcoded SPONSOR_ADS
+// fallback (used when /api/sponsor-cards is unreachable) uses plain ids like
+// "s1" with nothing in Neon to join against, so tracking calls skip those.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // ── SPONSOR ADS — mixed into Fun Facts carousel ───────────────────────────────
 const SPONSOR_ADS = [
   {
@@ -549,21 +554,55 @@ function LoginModal({ onClose, onLogin, currentUser, onLogout }) {
 }
 
 // ── COMMENTS ──────────────────────────────────────────────────────────────────
-function CommentsSection({ claim, user, onLoginRequest }) {
+async function fetchComments(claim) {
+  const res = await fetch(`/api/comments?claim=${encodeURIComponent(claim)}`, { cache: "no-store" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data.comments) ? data.comments : [];
+}
+
+function relativeTime(iso) {
+  const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return "Just now";
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function CommentsSection({ claim, user, sessionId, onLoginRequest }) {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
-  function submit() {
+  const [posting, setPosting] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetchComments(claim).then(rows => { if (alive) setComments(rows); });
+    return () => { alive = false; };
+  }, [claim]);
+
+  async function submit() {
     if (!user) { onLoginRequest(); return; }
-    if (!newComment.trim()) return;
-    setComments(prev=>[...prev, { id:Date.now(), name:user.name, emoji:PERSONAS.oracle.emoji, text:newComment.trim(), time:"Just now" }]);
-    setNewComment("");
+    if (!newComment.trim() || posting) return;
+    setPosting(true);
+    try {
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ claim, sessionId, firebaseUid: user.uid, displayName: user.name, text: newComment.trim() }),
+      });
+      const data = await res.json();
+      if (data.ok) setComments(prev => [...prev, data.comment]);
+      setNewComment("");
+    } finally {
+      setPosting(false);
+    }
   }
   return (
     <div style={{ padding:"20px", maxWidth:"700px", margin:"0 auto" }}>
       <h3 style={{ fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 14px" }}>💬 The Debate Floor</h3>
       <div style={{ display:"flex", gap:"8px", marginBottom:"16px" }}>
         <input value={newComment} onChange={e=>setNewComment(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()} placeholder={user?"Share your story or challenge this answer…":"Sign in to join the debate…"} style={{ flex:1, padding:"10px 12px", border:"1px solid #e2e8f0", borderRadius:"6px", fontFamily:"system-ui", fontSize:"13px", color:"#0f172a", outline:"none", background:"#f8fafc" }} />
-        <button onClick={submit} style={{ padding:"0 16px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#fff", whiteSpace:"nowrap" }}>
+        <button onClick={submit} disabled={posting} style={{ padding:"0 16px", background:"#dc2626", border:"none", borderRadius:"6px", cursor:posting?"wait":"pointer", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#fff", whiteSpace:"nowrap", opacity:posting?0.7:1 }}>
           {user ? "Post" : "Sign In"}
         </button>
       </div>
@@ -576,9 +615,8 @@ function CommentsSection({ claim, user, onLoginRequest }) {
         {comments.map(c=>(
           <div key={c.id} style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"12px 14px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"6px" }}>
-              <span>{c.emoji}</span>
               <span style={{ fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#0f172a" }}>{c.name}</span>
-              <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", marginLeft:"auto" }}>{c.time}</span>
+              <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", marginLeft:"auto" }}>{relativeTime(c.createdAt)}</span>
             </div>
             <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", lineHeight:"1.6", margin:0 }}>{c.text}</p>
           </div>
@@ -820,7 +858,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
 
         {activeTab==="debate" && (
           <>
-            <CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} />
+            <CommentsSection claim={query} user={user} sessionId={sessionId} onLoginRequest={onLoginRequest} />
             <div style={{ marginTop:"4px" }}>
               <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
             </div>
@@ -851,7 +889,16 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
 }
 
 // ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
-function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSignal }) {
+function trackSponsor(type, item, sessionId, firebaseUid) {
+  if (!UUID_RE.test(item?.id || "")) return;
+  fetch("/api/sponsor-track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, sponsorCardId: item.id, sessionId, firebaseUid, placement: "footer_carousel", destinationUrl: item.ctaUrl || null }),
+  }).catch(() => {});
+}
+
+function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSignal, sessionId, firebaseUid }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [trendingSearches, setTrendingSearches] = useState([]);
@@ -877,6 +924,11 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
   const item = carouselItems[current % carouselItems.length];
   const total = carouselItems.length;
 
+  useEffect(() => {
+    if (item?.isSponsor) trackSponsor("impression", item, sessionId, firebaseUid);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id]);
+
   // Auto-rotate unless the user recently interacted with the carousel
   useEffect(() => {
     if (paused) return;
@@ -892,6 +944,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
     setPaused(true);
     setTimeout(()=>setPaused(false), 8000);
     if (item.isSponsor) {
+      trackSponsor("click", item, sessionId, firebaseUid);
       if (item.linkMode === "direct" && item.ctaUrl) {
         window.open(item.ctaUrl, "_blank", "noopener,noreferrer");
         return;
@@ -1288,11 +1341,40 @@ export default function WHOzTHEY() {
     }
     setSessionId(stored);
 
+    fetch("/api/visitor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: stored, source: "web" }),
+    }).catch(() => {});
+
     const auth = getFirebaseAuth();
     return onAuthStateChanged(auth, firebaseUser => {
       setUser(appUserFromFirebase(firebaseUser));
     });
   }, []);
+
+  // Re-sync the visitor record whenever we learn more about who they are
+  // (signed in, or picked a persona) and restore any badges already earned
+  // on this session/account so the UI doesn't think they're starting fresh.
+  useEffect(() => {
+    if (!sessionId) return;
+    fetch("/api/visitor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, firebaseUid: user?.uid, email: user?.email, displayName: user?.name, persona, source: "web" }),
+    }).catch(() => {});
+
+    const params = new URLSearchParams({ sessionId });
+    if (user?.uid) params.set("firebaseUid", user.uid);
+    fetch(`/api/badges?${params.toString()}`, { cache: "no-store" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.badgeIds?.length) {
+          setBadges(prev => Array.from(new Set([...prev, ...data.badgeIds])));
+        }
+      })
+      .catch(() => {});
+  }, [sessionId, user?.uid, persona]);
 
   // Deep link: a shared result URL like /?q=claim opens straight into that result.
   useEffect(() => {
@@ -1316,6 +1398,11 @@ export default function WHOzTHEY() {
     if (!badge) return;
     setBadges(prev=>[...prev,id]);
     setToastBadge(badge);
+    fetch("/api/badges", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ badgeId: id, sessionId, firebaseUid: user?.uid }),
+    }).catch(() => {});
   }
 
   async function handleSearch(rawClaim) {
@@ -1431,7 +1518,7 @@ export default function WHOzTHEY() {
 
 
       {/* Sticky Footer Fun Facts */}
-      <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} refreshSignal={searchCount} />
+      <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} refreshSignal={searchCount} sessionId={sessionId} firebaseUid={user?.uid} />
 
       {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} currentUser={user} onLogin={u=>{ setUser(u); setShowPersona(true); }} onLogout={()=>{ setUser(null); }} />}
       {showQuiz&&(

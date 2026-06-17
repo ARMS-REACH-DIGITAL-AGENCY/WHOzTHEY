@@ -33,23 +33,9 @@ export async function GET() {
       order by table_name
     `;
 
-    const columnRows = await sql`
-      select table_name, column_name, data_type, is_nullable, column_default
-      from information_schema.columns
-      where table_schema = 'public'
-      order by table_name, ordinal_position
-    `;
-
-    const columnsByTable = {};
-    for (const row of columnRows) {
-      if (!columnsByTable[row.table_name]) columnsByTable[row.table_name] = [];
-      columnsByTable[row.table_name].push(row);
-    }
-
     return Response.json({
       ok: true,
       tables: rows.map((row) => row.table_name),
-      columns: columnsByTable,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

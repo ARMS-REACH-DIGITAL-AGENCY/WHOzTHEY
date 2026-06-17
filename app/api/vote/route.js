@@ -1,60 +1,10 @@
-import { neon } from '@neondatabase/serverless'
+import { getSql, findClaimId, findOrCreateClaimId } from '../../../lib/db'
 
-let sqlClient = null
-let tableReady = null
-
-function getDatabaseUrl() {
-  return (
-    process.env.DATABASE_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.POSTGRES_PRISMA_URL ||
-    process.env.POSTGRES_URL_NON_POOLING
-  )
-}
-
-function getSql() {
-  if (!sqlClient) {
-    const databaseUrl = getDatabaseUrl()
-
-    if (!databaseUrl) {
-      throw new Error(
-        'Missing database URL. Expected DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL_NON_POOLING.'
-      )
-    }
-
-    sqlClient = neon(databaseUrl)
-  }
-
-  return sqlClient
-}
-
-async function ensureTable() {
-  if (tableReady) return tableReady
-  const sql = getSql()
-  tableReady = sql`
-    create table if not exists votes (
-      id serial primary key,
-      normalized_claim text not null,
-      layer text not null,
-      choice text not null,
-      session_id text,
-      firebase_uid text,
-      created_at timestamptz not null default now(),
-      unique (normalized_claim, layer, session_id)
-    )
-  `
-  return tableReady
-}
-
-function normalizeClaim(claim) {
-  return claim
-    .toLowerCase()
-    .trim()
-    .replace(/^they say\s+/i, '')
-    .replace(/[“”"']/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
+let indexReady = null
+async function ensureIndexes(sql) {
+  if (indexReady) return indexReady
+  indexReady = sql`create unique index if not exists votes_claim_layer_session_idx on votes (claim_id, vote_layer, session_id)`
+  return indexReady
 }
 
 const LAYERS = ['claim', 'origin', 'who']
@@ -64,16 +14,16 @@ function emptyCounts() {
   return { sounds_good: 0, call_bs: 0, no_clue: 0, total: 0 }
 }
 
-async function getLayerCounts(sql, normalizedClaim, layer) {
+async function getLayerCounts(sql, claimId, layer) {
   const rows = await sql`
-    select choice, count(*)::int as n
+    select vote_value, count(*)::int as n
     from votes
-    where normalized_claim = ${normalizedClaim} and layer = ${layer}
-    group by choice
+    where claim_id = ${claimId} and vote_layer = ${layer}
+    group by vote_value
   `
   const counts = emptyCounts()
   for (const row of rows) {
-    if (CHOICES.includes(row.choice)) counts[row.choice] = row.n
+    if (CHOICES.includes(row.vote_value)) counts[row.vote_value] = row.n
   }
   counts.total = counts.sounds_good + counts.call_bs + counts.no_clue
   return counts
@@ -89,18 +39,23 @@ export async function GET(request) {
       return Response.json({ error: 'Missing claim' }, { status: 400 })
     }
 
-    await ensureTable()
     const sql = getSql()
-    const normalizedClaim = normalizeClaim(claim)
+    const claimId = await findClaimId(sql, claim)
+
+    if (!claimId) {
+      return layer
+        ? Response.json({ ok: true, layer, counts: emptyCounts() })
+        : Response.json({ ok: true, stats: { claim: emptyCounts(), origin: emptyCounts(), who: emptyCounts() } })
+    }
 
     if (layer) {
-      const counts = await getLayerCounts(sql, normalizedClaim, layer)
+      const counts = await getLayerCounts(sql, claimId, layer)
       return Response.json({ ok: true, layer, counts })
     }
 
     const result = {}
     for (const l of LAYERS) {
-      result[l] = await getLayerCounts(sql, normalizedClaim, l)
+      result[l] = await getLayerCounts(sql, claimId, l)
     }
     return Response.json({ ok: true, stats: result })
   } catch (error) {
@@ -118,18 +73,18 @@ export async function POST(request) {
       return Response.json({ error: 'Invalid vote payload' }, { status: 400 })
     }
 
-    await ensureTable()
     const sql = getSql()
-    const normalizedClaim = normalizeClaim(claim)
+    await ensureIndexes(sql)
+    const claimId = await findOrCreateClaimId(sql, claim)
 
     await sql`
-      insert into votes (normalized_claim, layer, choice, session_id, firebase_uid)
-      values (${normalizedClaim}, ${layer}, ${choice}, ${sessionId || null}, ${firebaseUid || null})
-      on conflict (normalized_claim, layer, session_id)
-      do update set choice = excluded.choice, created_at = now()
+      insert into votes (claim_id, vote_layer, vote_value, session_id, firebase_uid)
+      values (${claimId}, ${layer}, ${choice}, ${sessionId || null}, ${firebaseUid || null})
+      on conflict (claim_id, vote_layer, session_id)
+      do update set vote_value = excluded.vote_value, created_at = now()
     `
 
-    const counts = await getLayerCounts(sql, normalizedClaim, layer)
+    const counts = await getLayerCounts(sql, claimId, layer)
     return Response.json({ ok: true, layer, counts })
   } catch (error) {
     console.error('Vote POST error:', error)
