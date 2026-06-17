@@ -957,10 +957,10 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
   return (
     <header style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
 
-      {/* Row 1: "What did THEY say?" + icons */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px 8px" }}>
-        <span style={{ fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#f8fafc", letterSpacing:"-0.2px" }}>
-          What did <span style={{ color:"#dc2626" }}>THEY</span> say?
+      {/* Row 1: "Type a claim..." + icons */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px 8px", gap:"12px" }}>
+        <span style={{ fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#f8fafc", letterSpacing:"-0.2px", lineHeight:1.25 }}>
+          Type a claim below to see who <span style={{ color:"#dc2626" }}>"THEY"</span> is.
         </span>
         <div style={{ display:"flex", alignItems:"center", gap:"20px" }}>
           {/* Share */}
@@ -991,42 +991,45 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
       {/* Row 2: custom search input + WHOzTHEY submit button */}
       <div style={{ padding:"8px 16px 12px" }}>
-        <div style={{ display:"flex", background:"#1e293b", border:"1px solid #334155", borderRadius:"8px", overflow:"hidden" }}>
-          <input
-            type="text" value={claim}
-            autoFocus
-            onChange={e=>setClaim(e.target.value)}
-            onKeyDown={e=>e.key==="Enter"&&submit()}
-            placeholder=""
-            aria-label="Search a claim"
-            style={{ flex:1, padding:"14px 14px", background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"15px", color:"#f8fafc", caretColor:"#f8fafc", minWidth:0 }}
-          />
+        <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+          <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"4px 8px", padding:"12px 16px", background:"#1e293b", border:"1px solid #334155", borderRadius:"8px" }}>
+            <span style={{ fontFamily:"'Georgia',serif", fontStyle:"italic", fontWeight:"700", color:"#dc2626", fontSize:"15px", whiteSpace:"nowrap" }}>"THEY" say,</span>
+            <input
+              type="text" value={claim}
+              autoFocus
+              onChange={e=>setClaim(e.target.value)}
+              onKeyDown={e=>e.key==="Enter"&&submit()}
+              aria-label="Search a claim"
+              style={{ flex:1, minWidth:"100px", padding:0, background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"15px", color:"#f8fafc", caretColor:"#f8fafc" }}
+            />
+          </div>
           <button
             onClick={submit}
             disabled={loading||!claim.trim()}
             onMouseEnter={()=>setSubmitHover(true)}
             onMouseLeave={()=>setSubmitHover(false)}
+            aria-label="Search WHOzTHEY?"
             className="whoz-submit-btn"
             style={{
               position:"relative",
               overflow:"hidden",
               flexShrink:0,
-              padding:"8px 12px",
-              background: loading||!claim.trim() ? "#1e293b" : (submitHover ? "#b91c1c" : "#dc2626"),
-              border:"none",
-              borderLeft: loading||!claim.trim() ? "1px solid #334155" : "1px solid #b91c1c",
+              padding:"7px 9px",
+              background:submitHover&&!loading&&claim.trim()?"#dc2626":"#0f172a",
+              border:submitHover&&!loading&&claim.trim()?"1px solid #fca5a5":"1px solid #475569",
+              borderRadius:"9px",
               cursor:loading?"wait":claim.trim()?"pointer":"not-allowed",
               opacity:loading||!claim.trim()?0.55:1,
               display:"flex",
               alignItems:"center",
               justifyContent:"center",
-              transition:"background 0.15s ease, opacity 0.15s ease",
-              boxShadow: !loading&&claim.trim()&&!submitHover ? "0 2px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)" : "0 2px 0 rgba(0,0,0,0.25)",
+              transition:"all 0.15s ease",
+              boxShadow: submitHover&&!loading&&claim.trim() ? "0 0 0 3px rgba(220,38,38,0.25)" : "0 2px 0 rgba(0,0,0,0.4)",
             }}
           >
             {loading
               ? <span style={{ width:"20px", height:"20px", border:"2px solid #475569", borderTopColor:"transparent", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" }} />
-              : <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"36px", width:"auto" }} />
+              : <img src={submitHover&&!loading&&claim.trim() ? "/logo_blue_z.png" : "/logo.png"} alt="WHOzTHEY?" style={{ height:"36px", width:"auto", display:"block" }} />
             }
           </button>
         </div>
@@ -1041,37 +1044,8 @@ function WelcomeState({ onSearch, onStoreClick }) {
   return (
     <div style={{ background:"#ffffff" }}>
 
-      <div style={{ padding:"28px 20px 32px" }}>
-        {/* Tagline */}
-        <p style={{
-          fontFamily:"system-ui",
-          fontSize:"20px",
-          fontWeight:"700",
-          color:"#1e293b",
-          textAlign:"center",
-          margin:"0 0 8px",
-          letterSpacing:"-0.01em",
-        }}>
-          Tracing the Origin of Everything <span style={{ color:"#dc2626" }}>"They"</span> Ever Said
-        </p>
-        <p style={{
-          fontFamily:"system-ui",
-          fontSize:"12px",
-          color:"#94a3b8",
-          textAlign:"center",
-          margin:"0 0 28px",
-          letterSpacing:"0.02em",
-        }}>
-          Type a claim — we'll find out who <strong style={{ color:"#64748b", fontWeight:"600" }}>they</strong> really are
-        </p>
-
-        <div style={{ display:"flex", justifyContent:"center" }}>
-          <Wordmark size={40} />
-        </div>
-      </div>
-
       {/* Explainer: The Truth, Origin, and Curiosity Engine */}
-      <div style={{ padding:"0 20px 32px", maxWidth:"680px", margin:"0 auto" }}>
+      <div style={{ padding:"24px 20px 32px", maxWidth:"680px", margin:"0 auto" }}>
         <div style={{ borderRadius:"16px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)" }}>
           <img src="/explainer-engine.jpg" alt="The Truth, Origin, and Curiosity Engine — how WHOzTHEY? works in three steps" style={{ width:"100%", display:"block" }} />
         </div>
