@@ -608,7 +608,7 @@ function VoteBars({ counts }) {
     { key:"no_clue", label:"No Clue", color:"#64748b" },
   ];
   return (
-    <div style={{ marginTop:"8px", display:"flex", flexDirection:"column", gap:"5px" }}>
+    <div style={{ marginTop:"6px", display:"flex", flexDirection:"column", gap:"4px" }}>
       {rows.map(r=>{
         const pct = Math.round((counts[r.key]/counts.total)*100) || 0;
         return (
@@ -661,22 +661,22 @@ function DebatePanel({ query, persona, onBadgeEarned, sessionId, user }) {
   const p = persona ? PERSONAS[persona] : null;
 
   return (
-    <div style={{ background:"#f8fafc", borderTop:"1px solid #e2e8f0", padding:"20px" }}>
-      <div style={{ maxWidth:"700px", margin:"0 auto" }}>
-        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 14px" }}>⚡ Weigh In</p>
+    <div style={{ background:"#f8fafc", borderTop:"1px solid #e2e8f0", padding:"14px 0" }}>
+      <div style={{ width:"100%" }}>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 10px" }}>⚡ Weigh In</p>
         {layers.map(layer=>{
           const myVote = votes[layer.key];
           const selected = options.find(o=>o.key===myVote);
           const counts = stats?.[layer.key];
           return (
-            <div key={layer.key} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"14px 16px", marginBottom:"10px" }}>
-              <p style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 4px" }}>{layer.label}</p>
-              <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", margin:"0 0 12px" }}>{layer.question}</p>
+            <div key={layer.key} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"10px 12px", marginBottom:"8px" }}>
+              <p style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 3px" }}>{layer.label}</p>
+              <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#374151", margin:"0 0 8px", lineHeight:1.3 }}>{layer.question}</p>
               {!myVote ? (
                 <>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"8px" }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"6px" }}>
                     {options.map(opt=>(
-                      <button key={opt.key} onClick={()=>vote(layer.key,opt.key)} style={{ padding:"9px 6px", background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:opt.color, cursor:"pointer" }}>
+                      <button key={opt.key} onClick={()=>vote(layer.key,opt.key)} style={{ padding:"7px 4px", background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:"6px", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", color:opt.color, cursor:"pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                         {opt.emoji} {opt.label}
                       </button>
                     ))}
@@ -684,7 +684,7 @@ function DebatePanel({ query, persona, onBadgeEarned, sessionId, user }) {
                   <VoteBars counts={counts} />
                 </>
               ) : (
-                <div style={{ background:selected.bg, border:`1px solid ${selected.border}`, borderRadius:"6px", padding:"10px 12px" }}>
+                <div style={{ background:selected.bg, border:`1px solid ${selected.border}`, borderRadius:"6px", padding:"8px 10px" }}>
                   <span style={{ fontFamily:"system-ui", fontSize:"12px", color:selected.color, fontWeight:"700" }}>You: {selected.label}{p?` · ${p.emoji} ${p.title}`:""}</span>
                   <VoteBars counts={counts} />
                 </div>
