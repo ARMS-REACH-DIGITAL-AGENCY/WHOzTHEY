@@ -641,26 +641,39 @@ function DebatePanel({ query, answer, persona, onBadgeEarned }) {
 }
 
 // ── ANSWER PANEL ──────────────────────────────────────────────────────────────
-function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest }) {
-  const [showDebate, setShowDebate] = useState(false);
+const RESULT_TABS = [
+  { key:"origin",   label:"Origin",   icon:"origin" },
+  { key:"sides",    label:"Sides",    icon:"sides" },
+  { key:"spread",   label:"Spread",   icon:"spread" },
+  { key:"debate",   label:"Debate",   icon:"debate" },
+  { key:"comments", label:"Talk",     icon:"comments" },
+  { key:"share",    label:"Share",    icon:"share" },
+];
+
+function TabIcon({ name, color }) {
+  const common = { width:20, height:20, viewBox:"0 0 24 24", fill:"none", stroke:color, strokeWidth:2, strokeLinecap:"round", strokeLinejoin:"round" };
+  switch (name) {
+    case "origin":
+      return <svg {...common}><path d="M12 21s-7-6.2-7-12a7 7 0 0114 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>;
+    case "sides":
+      return <svg {...common}><path d="M12 3v18"/><path d="M5 7h5M14 7h5"/><path d="M3 7l2-4 2 4-2 3-2-3z"/><path d="M17 7l2-4 2 4-2 3-2-3z"/></svg>;
+    case "spread":
+      return <svg {...common}><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>;
+    case "debate":
+      return <svg {...common}><path d="M9 11l3 3L22 4"/><path d="M21 12v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h11"/></svg>;
+    case "comments":
+      return <svg {...common}><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>;
+    case "share":
+      return <svg {...common}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
+    default:
+      return null;
+  }
+}
+
+function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, footerHeight }) {
+  const [activeTab, setActiveTab] = useState("origin");
   if (!answer) return null;
   const vc = VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED;
-
-  function jumpTo(id, openDebate) {
-    if (openDebate) setShowDebate(true);
-    requestAnimationFrame(()=>{
-      document.getElementById(id)?.scrollIntoView({ behavior:"smooth", block:"start" });
-    });
-  }
-
-  const jumpLinks = [
-    { id:"jump-origin",   label:"Origin" },
-    { id:"jump-sides",    label:"Both Sides" },
-    { id:"jump-spread",   label:"How It Spread" },
-    { id:"jump-funfact",  label:"Fun Fact" },
-    { id:"jump-debate",   label:"⚡ Vote / Debate", openDebate:true },
-    { id:"jump-comments", label:"💬 Comments" },
-  ];
 
   return (
     <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
@@ -673,90 +686,109 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
           </div>
         </div>
       </div>
-      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"12px 24px", display:"flex", gap:"8px", overflowX:"auto", borderBottom:"1px solid #f1f5f9", WebkitOverflowScrolling:"touch" }}>
-        {jumpLinks.map(link=>(
-          <button key={link.id} onClick={()=>jumpTo(link.id, link.openDebate)} style={{ flexShrink:0, padding:"7px 14px", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"20px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#334155", cursor:"pointer", whiteSpace:"nowrap" }}>
-            {link.label}
-          </button>
-        ))}
+
+      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px", minHeight:"240px" }}>
+        {activeTab==="origin" && (
+          <>
+            <div style={{ marginBottom:"20px" }}>
+              <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
+              <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
+            </div>
+            <div>
+              <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
+              <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
+            </div>
+          </>
+        )}
+
+        {activeTab==="sides" && (
+          <>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
+              <div style={{ background:"#f0f9ff", border:"1px solid #7dd3fc", borderRadius:"8px", padding:"14px 16px" }}>
+                <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#0284c7", margin:"0 0 6px" }}>👁 From This Side</h3>
+                <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.traditionalView}</p>
+              </div>
+              <div style={{ background:"#f8fafc", border:"1px solid #cbd5e1", borderRadius:"8px", padding:"14px 16px" }}>
+                <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#475569", margin:"0 0 6px" }}>👁 From The Other Side</h3>
+                <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.modernView}</p>
+              </div>
+            </div>
+            {answer.commonGround && (
+              <div style={{ background:"#f0fdf4", border:"1px solid #86efac", borderRadius:"8px", padding:"14px 16px" }}>
+                <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#16a34a", margin:"0 0 6px" }}>🤝 Where Both Sides Agree</h3>
+                <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#14532d", lineHeight:"1.65", margin:0 }}>{answer.commonGround}</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab==="spread" && (
+          <>
+            <div style={{ background:"#f8fafc", borderRadius:"8px", padding:"16px 20px", borderLeft:"3px solid #dc2626", marginBottom:"20px" }}>
+              <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Spread</h3>
+              <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.culturalSpread}</p>
+            </div>
+            <div style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px" }}>
+              <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706", margin:"0 0 6px" }}>★ They Also Say…</h3>
+              <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#92400e", lineHeight:"1.7", margin:0 }}>{answer.funFact}</p>
+            </div>
+          </>
+        )}
+
+        {activeTab==="debate" && (
+          <DebatePanel query={query} answer={answer} persona={persona} onBadgeEarned={onBadgeEarned} />
+        )}
+
+        {activeTab==="comments" && (
+          <CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} />
+        )}
+
+        {activeTab==="share" && (
+          <>
+            <div style={{ marginBottom:"20px" }}>
+              <ShareButton query={query} verdict={answer.verdict||"DISPUTED"} />
+            </div>
+            {answer.sources?.length>0 && (
+              <div style={{ marginBottom:"20px" }}>
+                <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 8px" }}>Sources</h3>
+                <ul style={{ margin:0, padding:0, listStyle:"none", display:"flex", flexDirection:"column", gap:"4px" }}>
+                  {answer.sources.map((src,i)=><li key={i} style={{ fontFamily:"system-ui", fontSize:"12px", color:"#475569", display:"flex", gap:"6px" }}><span style={{ color:"#dc2626" }}>▸</span>{src}</li>)}
+                </ul>
+              </div>
+            )}
+            <div style={{ textAlign:"center", padding:"16px 0 4px", borderTop:"1px solid #f1f5f9" }}>
+              <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", color:"#94a3b8", fontStyle:"italic", margin:0 }}>
+                "WHOzTHEY? doesn't tell you what to think. We just find out who said it first."
+              </p>
+            </div>
+          </>
+        )}
       </div>
-      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px" }}>
-        {/* WHO is "they" */}
-        <div id="jump-origin" style={{ marginBottom:"20px" }}>
-          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
-          <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
-        </div>
-        <div style={{ marginBottom:"20px" }}>
-          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
-          <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
-        </div>
 
-        {/* Two sides of the hand */}
-        <div id="jump-sides" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
-          <div style={{ background:"#f0f9ff", border:"1px solid #7dd3fc", borderRadius:"8px", padding:"14px 16px" }}>
-            <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#0284c7", margin:"0 0 6px" }}>👁 From This Side</h3>
-            <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.traditionalView}</p>
-          </div>
-          <div style={{ background:"#f8fafc", border:"1px solid #cbd5e1", borderRadius:"8px", padding:"14px 16px" }}>
-            <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#475569", margin:"0 0 6px" }}>👁 From The Other Side</h3>
-            <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.modernView}</p>
-          </div>
+      <div style={{ position:"sticky", bottom:`${footerHeight}px`, zIndex:41, background:"#0f172a", borderTop:"1px solid #1e293b", boxShadow:"0 -2px 10px rgba(0,0,0,0.4)" }}>
+        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex" }}>
+          {RESULT_TABS.map(tab=>{
+            const active = activeTab===tab.key;
+            const color = active ? "#fff" : "#64748b";
+            return (
+              <button key={tab.key} onClick={()=>setActiveTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderTop:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
+                <TabIcon name={tab.icon} color={color} />
+                <span style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.06em", textTransform:"uppercase", color }}>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
-
-        {/* Where they meet */}
-        {answer.commonGround && (
-          <div style={{ background:"#f0fdf4", border:"1px solid #86efac", borderRadius:"8px", padding:"14px 16px", marginBottom:"20px" }}>
-            <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#16a34a", margin:"0 0 6px" }}>🤝 Where Both Sides Agree</h3>
-            <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#14532d", lineHeight:"1.65", margin:0 }}>{answer.commonGround}</p>
-          </div>
-        )}
-
-        {/* Cultural spread */}
-        <div id="jump-spread" style={{ background:"#f8fafc", borderRadius:"8px", padding:"16px 20px", borderLeft:"3px solid #dc2626", marginBottom:"20px" }}>
-          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Spread</h3>
-          <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.culturalSpread}</p>
-        </div>
-
-        {/* Fun fact */}
-        <div id="jump-funfact" style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px", marginBottom:"20px" }}>
-          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706", margin:"0 0 6px" }}>★ They Also Say…</h3>
-          <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#92400e", lineHeight:"1.7", margin:0 }}>{answer.funFact}</p>
-        </div>
-
-        {/* Cronkite sign-off */}
-        <div style={{ textAlign:"center", padding:"16px 0 4px", borderTop:"1px solid #f1f5f9" }}>
-          <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", color:"#94a3b8", fontStyle:"italic", margin:0 }}>
-            "WHOzTHEY? doesn't tell you what to think. We just find out who said it first."
-          </p>
-        </div>
-        {answer.sources?.length>0 && (
-          <div style={{ marginBottom:"20px" }}>
-            <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 8px" }}>Sources</h3>
-            <ul style={{ margin:0, padding:0, listStyle:"none", display:"flex", flexDirection:"column", gap:"4px" }}>
-              {answer.sources.map((src,i)=><li key={i} style={{ fontFamily:"system-ui", fontSize:"12px", color:"#475569", display:"flex", gap:"6px" }}><span style={{ color:"#dc2626" }}>▸</span>{src}</li>)}
-            </ul>
-          </div>
-        )}
-        <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"20px" }}>
-          <ShareButton query={query} verdict={answer.verdict||"DISPUTED"} />
-        </div>
-        {!showDebate && (
-          <button id="jump-debate" onClick={()=>setShowDebate(true)} style={{ width:"100%", padding:"14px", background:"#0f172a", border:"none", borderRadius:"8px", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px" }}>
-            ⚡ Do you agree? Join the Debate
-          </button>
-        )}
       </div>
-      {showDebate && <div id="jump-debate"><DebatePanel query={query} answer={answer} persona={persona} onBadgeEarned={onBadgeEarned} /></div>}
-      <div id="jump-comments"><CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} /></div>
     </section>
   );
 }
 
 // ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
-function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
+function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, onHeightChange }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [trendingSearches, setTrendingSearches] = useState([]);
+  const footerRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -765,6 +797,16 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
       .catch(() => { if (alive) setTrendingSearches([]); });
     return () => { alive = false; };
   }, []);
+
+  useEffect(() => {
+    if (!footerRef.current || !onHeightChange) return;
+    const el = footerRef.current;
+    const report = () => onHeightChange(el.offsetHeight);
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onHeightChange]);
 
   const carouselItems = useMemo(() => buildCarousel(trendingSearches), [trendingSearches]);
   const item = carouselItems[current % carouselItems.length];
@@ -793,7 +835,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
   }
 
   return (
-    <footer style={{ background:"#0f172a", position:"sticky", bottom:0, zIndex:40, boxShadow:"0 -4px 16px rgba(0,0,0,0.5)" }}>
+    <footer ref={footerRef} style={{ background:"#0f172a", position:"sticky", bottom:0, zIndex:40, boxShadow:"0 -4px 16px rgba(0,0,0,0.5)" }}>
       <div style={{ maxWidth:"760px", margin:"0 auto" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 12px" }}>
           <button onClick={prev} aria-label="Previous footer item" style={{ background:"none", border:"none", cursor:"pointer", color:"#fff", fontSize:"22px", padding:"0 8px", lineHeight:1, fontWeight:"300" }}>‹</button>
@@ -1147,6 +1189,7 @@ export default function WHOzTHEY() {
   const [loadingStage, setLoadingStage] = useState("clarify");
   const [error, setError]             = useState(null);
   const [selectedSponsor, setSelectedSponsor] = useState(null);
+  const [footerHeight, setFooterHeight] = useState(118);
   const [searchCount, setSearchCount] = useState(0);
   const [sessionId, setSessionId]     = useState(null);
   const answerRef                     = useRef(null);
@@ -1274,7 +1317,7 @@ export default function WHOzTHEY() {
               <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
             )}
             {answer&&!loading&&!selectedSponsor&&(
-              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} />
+              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} footerHeight={footerHeight} />
             )}
           </div>
           {isWelcome&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
@@ -1286,7 +1329,7 @@ export default function WHOzTHEY() {
 
 
       {/* Sticky Footer Fun Facts */}
-      <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} />
+      <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} onHeightChange={setFooterHeight} />
 
       {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} currentUser={user} onLogin={u=>{ setUser(u); setShowPersona(true); }} onLogout={()=>{ setUser(null); }} />}
       {showQuiz&&(
