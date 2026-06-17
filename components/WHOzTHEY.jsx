@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { initializeApp, getApp, getApps } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -157,11 +157,21 @@ const SPONSOR_ADS = [
   },
 ];
 
-// Interleave sponsor ads every 4 fact cards
-function buildCarousel() {
+// Interleave sponsor ads every 4 cards. Real trending searches (when available)
+// lead the rotation; seed facts fill the rest.
+function buildCarousel(trending = []) {
+  const trendingItems = trending.map((row, i) => ({
+    isSponsor: false,
+    isTrending: true,
+    teaser: row.raw_claim || row.display_claim,
+    id: row.id || `t${i}`,
+  }));
+  const factItems = SEED_FACTS.map((fact, i) => ({ isSponsor: false, isTrending: false, teaser: fact, id: `f${i}` }));
+  const pool = [...trendingItems, ...factItems];
+
   const items = [];
-  SEED_FACTS.forEach((fact, i) => {
-    items.push({ isSponsor: false, teaser: fact, id: `f${i}` });
+  pool.forEach((entry, i) => {
+    items.push(entry);
     if ((i + 1) % 4 === 0) {
       const ad = SPONSOR_ADS[Math.floor((i + 1) / 4 - 1) % SPONSOR_ADS.length];
       items.push(ad);
@@ -169,7 +179,6 @@ function buildCarousel() {
   });
   return items;
 }
-const CAROUSEL_ITEMS = buildCarousel();
 
 // ── MERCH DATA ────────────────────────────────────────────────────────────────
 const MERCH = [
@@ -727,8 +736,19 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [buttonHover, setButtonHover] = useState(false);
-  const item = CAROUSEL_ITEMS[current];
-  const total = CAROUSEL_ITEMS.length;
+  const [trendingSearches, setTrendingSearches] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    fetchRecentSearches()
+      .then(rows => { if (alive) setTrendingSearches(rows); })
+      .catch(() => { if (alive) setTrendingSearches([]); });
+    return () => { alive = false; };
+  }, []);
+
+  const carouselItems = useMemo(() => buildCarousel(trendingSearches), [trendingSearches]);
+  const item = carouselItems[current % carouselItems.length];
+  const total = carouselItems.length;
 
   // Auto-rotate unless the user recently interacted with the carousel
   useEffect(() => {
@@ -758,7 +778,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 12px" }}>
           <button onClick={prev} aria-label="Previous footer item" style={{ background:"none", border:"none", cursor:"pointer", color:"#fff", fontSize:"22px", padding:"0 8px", lineHeight:1, fontWeight:"300" }}>‹</button>
           <span style={{ fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#fff" }}>
-            {item.isSponsor ? "★ SPONSORED" : "★ FUN FACTS"}
+            {item.isSponsor ? "★ SPONSORED" : item.isTrending ? "★ RECENT TRENDING SEARCHES" : "★ FUN FACTS"}
           </span>
           <button onClick={next} aria-label="Next footer item" style={{ background:"none", border:"none", cursor:"pointer", color:"#fff", fontSize:"22px", padding:"0 8px", lineHeight:1, fontWeight:"300" }}>›</button>
         </div>
@@ -774,14 +794,17 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
             onMouseEnter={()=>setButtonHover(true)}
             onMouseLeave={()=>setButtonHover(false)}
             aria-label="Open this WHOzTHEY result"
+            className="whoz-submit-btn"
             style={{
+              position:"relative",
+              overflow:"hidden",
               flexShrink:0,
               padding:"7px 9px",
               background:buttonHover?"#dc2626":"#0f172a",
               border:buttonHover?"1px solid #fca5a5":"1px solid #475569",
               borderRadius:"9px",
               cursor:"pointer",
-              boxShadow:buttonHover?"0 0 0 3px rgba(220,38,38,0.25)":"none",
+              boxShadow:buttonHover?"0 0 0 3px rgba(220,38,38,0.25)":"0 2px 0 rgba(0,0,0,0.4)",
               transition:"all 0.15s ease",
               display:"flex",
               alignItems:"center",
@@ -983,7 +1006,10 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
             disabled={loading||!claim.trim()}
             onMouseEnter={()=>setSubmitHover(true)}
             onMouseLeave={()=>setSubmitHover(false)}
+            className="whoz-submit-btn"
             style={{
+              position:"relative",
+              overflow:"hidden",
               flexShrink:0,
               padding:"8px 12px",
               background: loading||!claim.trim() ? "#1e293b" : (submitHover ? "#b91c1c" : "#dc2626"),
@@ -995,7 +1021,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               alignItems:"center",
               justifyContent:"center",
               transition:"background 0.15s ease, opacity 0.15s ease",
-              boxShadow: !loading&&claim.trim()&&!submitHover ? "inset 0 1px 0 rgba(255,255,255,0.12)" : "none",
+              boxShadow: !loading&&claim.trim()&&!submitHover ? "0 2px 0 rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.12)" : "0 2px 0 rgba(0,0,0,0.25)",
             }}
           >
             {loading
@@ -1012,19 +1038,6 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 function WelcomeState({ onSearch }) {
-  const [recentSearches, setRecentSearches] = useState([]);
-  const [loadingRecent, setLoadingRecent] = useState(true);
-  const [hoveredIdx, setHoveredIdx] = useState(null);
-
-  useEffect(() => {
-    let alive = true;
-    fetchRecentSearches()
-      .then(rows => { if (alive) setRecentSearches(rows); })
-      .catch(() => { if (alive) setRecentSearches([]); })
-      .finally(() => { if (alive) setLoadingRecent(false); });
-    return () => { alive = false; };
-  }, []);
-
   return (
     <div style={{ background:"#ffffff", padding:"28px 20px 80px" }}>
 
@@ -1051,88 +1064,8 @@ function WelcomeState({ onSearch }) {
         Type a claim — we'll find out who <strong style={{ color:"#64748b", fontWeight:"600" }}>they</strong> really are
       </p>
 
-      {/* Two-column layout */}
-      <div style={{
-        maxWidth:"680px",
-        margin:"0 auto",
-        display:"flex",
-        alignItems:"stretch",
-        gap:"0",
-      }}>
-
-        {/* Left: Logo */}
-        <div style={{
-          flex:"0 0 auto",
-          display:"flex",
-          alignItems:"center",
-          justifyContent:"center",
-          paddingRight:"28px",
-        }}>
-          <Wordmark size={40} />
-        </div>
-
-        {/* Vertical divider */}
-        <div style={{ width:"1px", background:"#e2e8f0", flexShrink:0 }} />
-
-        {/* Right: Trending list */}
-        <div style={{ flex:1, paddingLeft:"24px" }}>
-          <p style={{
-            fontFamily:"system-ui",
-            fontSize:"10px",
-            fontWeight:"800",
-            letterSpacing:"0.14em",
-            textTransform:"uppercase",
-            color:"#dc2626",
-            margin:"0 0 12px",
-          }}>
-            🔥 Trending Searches
-          </p>
-
-          {loadingRecent && (
-            <div style={{ padding:"16px 0" }}>
-              <div style={{ width:"18px", height:"18px", border:"2px solid #e2e8f0", borderTopColor:"#dc2626", borderRadius:"50%", animation:"spin 0.7s linear infinite" }} />
-            </div>
-          )}
-
-          {!loadingRecent && recentSearches.length === 0 && (
-            <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#94a3b8", margin:0 }}>
-              No recent searches yet. Be the first!
-            </p>
-          )}
-
-          {!loadingRecent && recentSearches.length > 0 && (
-            <div style={{ maxHeight:"320px", overflowY:"auto" }}>
-              {recentSearches.map((row, i) => {
-                const claim = row.raw_claim || row.display_claim;
-                return (
-                  <button
-                    key={row.id || `${claim}-${i}`}
-                    onClick={() => onSearch(claim)}
-                    onMouseEnter={() => setHoveredIdx(i)}
-                    onMouseLeave={() => setHoveredIdx(null)}
-                    style={{
-                      display:"block",
-                      width:"100%",
-                      textAlign:"left",
-                      background: hoveredIdx === i ? "#f8fafc" : "transparent",
-                      border:"none",
-                      borderBottom:"1px solid #f1f5f9",
-                      padding:"10px 8px",
-                      cursor:"pointer",
-                      fontFamily:"'Georgia',serif",
-                      fontSize:"14px",
-                      color:"#0f172a",
-                      lineHeight:1.4,
-                      transition:"background 0.1s ease",
-                    }}
-                  >
-                    <span style={{ color:"#dc2626", fontWeight:"700" }}>They say</span>{" "}{claim}…
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+      <div style={{ display:"flex", justifyContent:"center" }}>
+        <Wordmark size={40} />
       </div>
     </div>
   );
@@ -1337,7 +1270,16 @@ export default function WHOzTHEY() {
         </div>
       )}
       {toastBadge&&<BadgeToast badge={toastBadge} onDone={()=>setToastBadge(null)} />}
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}`}</style>
+      <style>{`
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes slideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+        @keyframes whoztheyShake{0%,88%,100%{transform:rotate(0deg)}90%{transform:rotate(-5deg)}92%{transform:rotate(5deg)}94%{transform:rotate(-4deg)}96%{transform:rotate(3deg)}98%{transform:rotate(0deg)}}
+        @keyframes whoztheyShimmer{0%,70%{left:-60%}100%{left:160%}}
+        .whoz-submit-btn{animation:whoztheyShake 5s ease-in-out infinite}
+        .whoz-submit-btn::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,0.5),transparent);transform:skewX(-20deg);animation:whoztheyShimmer 5s ease-in-out infinite;pointer-events:none}
+        .whoz-submit-btn:disabled{animation:none}
+        .whoz-submit-btn:disabled::after{animation:none;display:none}
+      `}</style>
     </div>
   );
 }
