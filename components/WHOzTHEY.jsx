@@ -1075,7 +1075,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
       {/* Row 1: "Type a claim..." + icons */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"8px" }}>
-        <span style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", lineHeight:1.6 }}>
+        <span style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#f8fafc", lineHeight:1.15 }}>
           Type a claim below<br/>to see who <span style={{ color:"#dc2626" }}>"they"</span> are
         </span>
         <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
@@ -1107,16 +1107,17 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
       {/* Row 2: custom search input + WHOzTHEY submit button (same card treatment as the footer carousel row) */}
       <div style={{ padding:"6px 14px 10px" }}>
-        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 10px", display:"flex", alignItems:"center", gap:"8px", boxSizing:"border-box" }}>
-          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"2px" }}>
+        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 10px", display:"flex", alignItems:"flex-start", gap:"8px", boxSizing:"border-box" }}>
+          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"0px" }}>
             <span style={{ fontFamily:"system-ui", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", fontSize:"10px", whiteSpace:"nowrap" }}>"they" say,</span>
-            <input
-              type="text" value={claim}
+            <textarea
+              rows={2}
+              value={claim}
               autoFocus
               onChange={e=>setClaim(e.target.value)}
-              onKeyDown={e=>e.key==="Enter"&&submit()}
+              onKeyDown={e=>{ if (e.key==="Enter") { e.preventDefault(); submit(); } }}
               aria-label="Search a claim"
-              style={{ width:"100%", padding:0, background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"13px", color:"#f8fafc", caretColor:"#f8fafc" }}
+              style={{ width:"100%", padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"system-ui", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
             />
           </div>
           <button
