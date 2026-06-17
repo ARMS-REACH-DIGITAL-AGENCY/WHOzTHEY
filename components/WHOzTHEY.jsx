@@ -227,18 +227,18 @@ async function fetchRecentSearches() {
 }
 
 const VERDICT_MAP = {
-  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", label:"📍 Origin Traced" },
-  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", label:"⚖️ Both Sides Valid" },
-  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", label:"🏡 Traditional Wisdom" },
-  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", label:"🏛 Institutionally Pushed" },
-  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", label:"🤷 Genuinely Disputed" },
-  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
+  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced" },
+  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", emoji:"⚖️", text:"Both Sides Valid" },
+  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", emoji:"🏡", text:"Traditional Wisdom" },
+  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", emoji:"🏛", text:"Institutionally Pushed" },
+  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", emoji:"🤷", text:"Genuinely Disputed" },
+  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
   // fallbacks for old verdicts
-  TRUE:             { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", label:"📍 Origin Traced" },
-  FALSE:            { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
-  "PARTIALLY TRUE": { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", label:"⚖️ Both Sides Valid" },
-  MYTH:             { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", label:"😄 Lighthearted Myth" },
-  DISPUTED:         { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", label:"🤷 Genuinely Disputed" },
+  TRUE:             { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced" },
+  FALSE:            { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
+  "PARTIALLY TRUE": { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", emoji:"⚖️", text:"Both Sides Valid" },
+  MYTH:             { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
+  DISPUTED:         { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", emoji:"🤷", text:"Genuinely Disputed" },
 };
 
 // ── FIREBASE AUTH ─────────────────────────────────────────────────────────────
@@ -664,11 +664,13 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
 
   return (
     <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
-      <div style={{ background:vc.bg, borderBottom:`1px solid ${vc.border}`, padding:"20px 24px" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto" }}>
-          <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 4px" }}>They say…</p>
-          <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"20px", fontWeight:"700", color:"#0f172a", margin:"0 0 10px", lineHeight:1.3 }}>"{query}"</h2>
-          <span style={{ display:"inline-block", padding:"4px 12px", borderRadius:"20px", background:vc.badge, color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.08em", textTransform:"uppercase" }}>{vc.label}</span>
+      <div style={{ background:vc.bg, borderBottom:`1px solid ${vc.border}`, padding:"14px 24px" }}>
+        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex", alignItems:"center", gap:"14px" }}>
+          <span role="img" aria-label={vc.text} style={{ fontSize:"36px", lineHeight:1, flexShrink:0 }}>{vc.emoji}</span>
+          <div>
+            <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 2px" }}>The Verdict</p>
+            <p style={{ fontFamily:"system-ui", fontSize:"16px", fontWeight:"700", letterSpacing:"0.02em", color:vc.badge, margin:0 }}>{vc.text}</p>
+          </div>
         </div>
       </div>
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"12px 24px", display:"flex", gap:"8px", overflowX:"auto", borderBottom:"1px solid #f1f5f9", WebkitOverflowScrolling:"touch" }}>
@@ -796,7 +798,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 12px" }}>
           <button onClick={prev} aria-label="Previous footer item" style={{ background:"none", border:"none", cursor:"pointer", color:"#fff", fontSize:"22px", padding:"0 8px", lineHeight:1, fontWeight:"300" }}>‹</button>
           <span style={{ fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#fff" }}>
-            {item.isSponsor ? "★ SPONSORED" : item.isTrending ? "★ RECENT TRENDING SEARCHES" : "★ FUN FACTS"}
+            {item.isSponsor ? "★ SPONSORED" : "★ RECENT TRENDING SEARCHES"}
           </span>
           <button onClick={next} aria-label="Next footer item" style={{ background:"none", border:"none", cursor:"pointer", color:"#fff", fontSize:"22px", padding:"0 8px", lineHeight:1, fontWeight:"300" }}>›</button>
         </div>
@@ -963,8 +965,9 @@ function _OldMarketplace_UNUSED() {
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract }) {
+function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract, query }) {
   const [claim, setClaim] = useState("");
+  useEffect(() => { setClaim(query || ""); }, [query]);
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
 
@@ -1249,7 +1252,7 @@ export default function WHOzTHEY() {
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} />
 
 
 
