@@ -1037,35 +1037,76 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 
-function WelcomeState({ onSearch }) {
+function WelcomeState({ onSearch, onStoreClick }) {
   return (
-    <div style={{ background:"#ffffff", padding:"28px 20px 80px" }}>
+    <div style={{ background:"#ffffff" }}>
 
-      {/* Tagline */}
-      <p style={{
-        fontFamily:"system-ui",
-        fontSize:"20px",
-        fontWeight:"700",
-        color:"#1e293b",
-        textAlign:"center",
-        margin:"0 0 8px",
-        letterSpacing:"-0.01em",
-      }}>
-        Tracing the Origin of Everything <span style={{ color:"#dc2626" }}>"They"</span> Ever Said
-      </p>
-      <p style={{
-        fontFamily:"system-ui",
-        fontSize:"12px",
-        color:"#94a3b8",
-        textAlign:"center",
-        margin:"0 0 28px",
-        letterSpacing:"0.02em",
-      }}>
-        Type a claim — we'll find out who <strong style={{ color:"#64748b", fontWeight:"600" }}>they</strong> really are
-      </p>
+      <div style={{ padding:"28px 20px 32px" }}>
+        {/* Tagline */}
+        <p style={{
+          fontFamily:"system-ui",
+          fontSize:"20px",
+          fontWeight:"700",
+          color:"#1e293b",
+          textAlign:"center",
+          margin:"0 0 8px",
+          letterSpacing:"-0.01em",
+        }}>
+          Tracing the Origin of Everything <span style={{ color:"#dc2626" }}>"They"</span> Ever Said
+        </p>
+        <p style={{
+          fontFamily:"system-ui",
+          fontSize:"12px",
+          color:"#94a3b8",
+          textAlign:"center",
+          margin:"0 0 28px",
+          letterSpacing:"0.02em",
+        }}>
+          Type a claim — we'll find out who <strong style={{ color:"#64748b", fontWeight:"600" }}>they</strong> really are
+        </p>
 
-      <div style={{ display:"flex", justifyContent:"center" }}>
-        <Wordmark size={40} />
+        <div style={{ display:"flex", justifyContent:"center" }}>
+          <Wordmark size={40} />
+        </div>
+      </div>
+
+      {/* Explainer: The Truth, Origin, and Curiosity Engine */}
+      <div style={{ padding:"0 20px 32px", maxWidth:"680px", margin:"0 auto" }}>
+        <div style={{ borderRadius:"16px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)" }}>
+          <img src="/explainer-engine.jpg" alt="The Truth, Origin, and Curiosity Engine — how WHOzTHEY? works in three steps" style={{ width:"100%", display:"block" }} />
+        </div>
+        {/* Video placeholder — swap for the explainer video embed when ready */}
+        <div style={{ marginTop:"10px", textAlign:"center" }}>
+          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", letterSpacing:"0.04em" }}>
+            🎬 Explainer video coming soon
+          </span>
+        </div>
+      </div>
+
+      {/* Swag Store promo */}
+      <div style={{ background:"#0f172a", padding:"28px 20px 32px" }}>
+        <div style={{ maxWidth:"680px", margin:"0 auto" }}>
+          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:"16px", flexWrap:"wrap", marginBottom:"20px" }}>
+            <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", fontWeight:"700", color:"#dc2626", margin:0, lineHeight:1.4, flex:"1 1 240px" }}>
+              "THEY" SAY WHOzTHEY? SWAG CAN MAKE A GREAT GIFT FOR THE 'KNOWNIT ALL' IN YOUR LIFE!
+            </p>
+            <button onClick={onStoreClick} style={{ flexShrink:0, padding:"12px 20px", background:"#dc2626", border:"none", borderRadius:"8px", color:"#fff", fontFamily:"system-ui", fontSize:"13px", fontWeight:"700", letterSpacing:"0.04em", cursor:"pointer", boxShadow:"0 2px 0 rgba(0,0,0,0.3)" }}>
+              SHOP OUR SWAG SHOP
+            </button>
+          </div>
+
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:"12px" }}>
+            {[
+              { src:"/swag-hat-navy.jpg", alt:"WHOzTHEY? navy trucker hat" },
+              { src:"/swag-hoodie-pink.jpg", alt:'"Hello I\'m THEY" pink hoodie' },
+              { src:"/swag-hat-red-bs.jpg", alt:'"I Call Bullshit" red trucker hat' },
+            ].map(item => (
+              <button key={item.src} onClick={onStoreClick} style={{ background:"#fff", border:"none", borderRadius:"10px", padding:"8px", cursor:"pointer", overflow:"hidden" }}>
+                <img src={item.src} alt={item.alt} style={{ width:"100%", display:"block", borderRadius:"6px" }} />
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1249,7 +1290,7 @@ export default function WHOzTHEY() {
               <AnswerPanel query={query} answer={answer} onClear={handleClear} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} />
             )}
           </div>
-          {!loading&&!answer&&!error&&!clarification&&!selectedSponsor&&<WelcomeState onSearch={handleSearch} />}
+          {!loading&&!answer&&!error&&!clarification&&!selectedSponsor&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
 
         </>
       )}
