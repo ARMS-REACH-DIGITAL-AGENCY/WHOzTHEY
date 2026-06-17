@@ -959,8 +959,8 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
       {/* Row 1: "Type a claim..." + icons */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"8px" }}>
-        <span style={{ fontFamily:"'Georgia',serif", fontSize:"12px", fontWeight:"700", color:"#f8fafc", letterSpacing:"-0.2px", lineHeight:1.25 }}>
-          Type a claim below to see who <span style={{ color:"#dc2626" }}>"THEY"</span> is.
+        <span style={{ fontFamily:"system-ui", fontSize:"7px", fontWeight:"700", color:"#f8fafc", letterSpacing:"0.04em", lineHeight:1.5 }}>
+          TYPE A CLAIM BELOW<br/>TO SEE WHO <span style={{ color:"#dc2626" }}>"THEY"</span> ARE
         </span>
         <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
           {/* Share */}
