@@ -75,7 +75,7 @@ const ALL_BADGES = [
   { id:"debate_all3",   emoji:"⚡",  label:"Full Debate",   desc:"Voted on all 3 debate layers" },
   { id:"settle_it",     emoji:"🕊️",  label:"Settled It",    desc:"Used Settle the Argument" },
   { id:"five_searches", emoji:"🧠",  label:"Deep Diver",    desc:"Searched 5 different claims" },
-  { id:"fun_fact_fan",  emoji:"★",   label:"Fun Fact Fan",  desc:"Revealed a Fun Facts answer" },
+  { id:"fun_fact_fan",  emoji:"★",   label:"Trend Spotter", desc:"Opened a Recent Trending Search" },
   { id:"streak_3",      emoji:"🔢",  label:"On a Roll",     desc:"Searched 3 claims in one session" },
   { id:"clarified",     emoji:"🎯",  label:"Precise",       desc:"Used THEY Said WHAT? to clarify" },
 ];
@@ -400,18 +400,30 @@ function BadgeToast({ badge, onDone }) {
   );
 }
 
-// ── SHARE BUTTON ──────────────────────────────────────────────────────────────
-function ShareButton({ query, verdict }) {
+// ── SHARE / SETTLE THE ARGUMENT BUTTON ───────────────────────────────────────
+function buildShareUrl(claim) {
+  if (typeof window === "undefined") return "https://whozthey.com";
+  const url = new URL(window.location.origin + "/");
+  url.searchParams.set("q", claim);
+  return url.toString();
+}
+
+function ShareButton({ query, verdict, onBadgeEarned }) {
   const [copied, setCopied] = useState(false);
   function share() {
-    const text = `They say "${query}" — WHOzTHEY? verdict: ${verdict}. Find out who "they" really are 👉 whoZthey.com`;
-    if (navigator.share) { navigator.share({ title:"WHOzTHEY?", text, url:"https://whozthey.com" }).catch(()=>{}); }
+    const shareUrl = buildShareUrl(query);
+    const text = `They say "${query}" — WHOzTHEY? verdict: ${verdict}. Settle the argument 👉 ${shareUrl}`;
+    onBadgeEarned?.("settle_it");
+    if (navigator.share) { navigator.share({ title:"WHOzTHEY?", text, url:shareUrl }).catch(()=>{}); }
     else { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(()=>setCopied(false),2000); }
   }
   return (
-    <button onClick={share} style={{ display:"inline-flex", alignItems:"center", gap:"6px", padding:"8px 16px", background:"#0f172a", border:"1px solid #334155", borderRadius:"6px", cursor:"pointer", fontFamily:"system-ui", fontSize:"12px", fontWeight:"600", color:"#f8fafc" }}>
-      {copied ? "✓ Copied!" : "📤 Share this result"}
-    </button>
+    <div style={{ background:"#0f172a", borderRadius:"8px", padding:"16px", textAlign:"center" }}>
+      <p style={{ fontFamily:"'Georgia',serif", fontSize:"14px", color:"#f8fafc", margin:"0 0 10px" }}>Arguing about this with someone?</p>
+      <button onClick={share} style={{ padding:"10px 24px", background:"#dc2626", border:"none", borderRadius:"6px", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", cursor:"pointer" }}>
+        {copied ? "✓ Copied! Paste it anywhere" : "🕊️ Settle the Argument"}
+      </button>
+    </div>
   );
 }
 
@@ -567,11 +579,62 @@ function CommentsSection({ claim, user, onLoginRequest }) {
   );
 }
 
-// ── DEBATE PANEL ──────────────────────────────────────────────────────────────
-function DebatePanel({ query, answer, persona, onBadgeEarned }) {
+// ── DEBATE PANEL (VOTE TAB) ───────────────────────────────────────────────────
+async function fetchVoteStats(claim) {
+  const res = await fetch(`/api/vote?claim=${encodeURIComponent(claim)}`, { cache:"no-store" });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.ok ? data.stats : null;
+}
+
+async function postVote(claim, layer, choice, sessionId, firebaseUid) {
+  const res = await fetch("/api/vote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ claim, layer, choice, sessionId, firebaseUid }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.ok ? data.counts : null;
+}
+
+function VoteBars({ counts }) {
+  if (!counts || counts.total === 0) {
+    return <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", margin:"4px 0 0" }}>Be the first to weigh in on this layer.</p>;
+  }
+  const rows = [
+    { key:"sounds_good", label:"Sounds Good", color:"#16a34a" },
+    { key:"call_bs", label:"I Call BS", color:"#dc2626" },
+    { key:"no_clue", label:"No Clue", color:"#64748b" },
+  ];
+  return (
+    <div style={{ marginTop:"8px", display:"flex", flexDirection:"column", gap:"5px" }}>
+      {rows.map(r=>{
+        const pct = Math.round((counts[r.key]/counts.total)*100) || 0;
+        return (
+          <div key={r.key} style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+            <span style={{ fontFamily:"system-ui", fontSize:"10px", color:"#64748b", width:"78px", flexShrink:0 }}>{r.label}</span>
+            <div style={{ flex:1, height:"6px", background:"#e2e8f0", borderRadius:"4px", overflow:"hidden" }}>
+              <div style={{ width:`${pct}%`, height:"100%", background:r.color }} />
+            </div>
+            <span style={{ fontFamily:"system-ui", fontSize:"10px", color:"#94a3b8", width:"34px", textAlign:"right" }}>{pct}%</span>
+          </div>
+        );
+      })}
+      <span style={{ fontFamily:"system-ui", fontSize:"10px", color:"#94a3b8", marginTop:"2px" }}>{counts.total} vote{counts.total===1?"":"s"} so far</span>
+    </div>
+  );
+}
+
+function DebatePanel({ query, persona, onBadgeEarned, sessionId, user }) {
   const [votes, setVotes] = useState({ claim:null, origin:null, who:null });
-  const [settled, setSettled] = useState(false);
-  const [shareMsg, setShareMsg] = useState("");
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchVoteStats(query).then(s => { if (alive) setStats(s); });
+    return () => { alive = false; };
+  }, [query]);
 
   const options = [
     { key:"sounds_good", label:"Sounds Good", color:"#16a34a", bg:"#f0fdf4", border:"#86efac", emoji:"✓" },
@@ -585,19 +648,14 @@ function DebatePanel({ query, answer, persona, onBadgeEarned }) {
     { key:"who",    label:'WHO IS "THEY"?', question:"Does WHOzTHEY? seem to have identified 'they' correctly?" },
   ];
 
-  function vote(layer, side) {
+  async function vote(layer, side) {
     const next = { ...votes, [layer]:side };
     setVotes(next);
     if (layer==="claim"&&side==="call_bs") onBadgeEarned("first_callbs");
     if (layer==="claim"&&side==="sounds_good") onBadgeEarned("first_believe");
     if (next.claim&&next.origin&&next.who) onBadgeEarned("debate_all3");
-  }
-
-  function handleSettle() {
-    const msg = `They say "${query}" — WHOzTHEY? says ${answer.verdict||"DISPUTED"}. Argument settled. 👉 whoZthey.com`;
-    setShareMsg(msg); setSettled(true); onBadgeEarned("settle_it");
-    if (navigator.share) navigator.share({ title:"WHOzTHEY?", text:msg, url:"https://whozthey.com" }).catch(()=>{});
-    else navigator.clipboard?.writeText(msg);
+    const counts = await postVote(query, layer, side, sessionId, user?.uid);
+    if (counts) setStats(prev => ({ ...(prev||{}), [layer]:counts }));
   }
 
   const p = persona ? PERSONAS[persona] : null;
@@ -605,36 +663,35 @@ function DebatePanel({ query, answer, persona, onBadgeEarned }) {
   return (
     <div style={{ background:"#f8fafc", borderTop:"1px solid #e2e8f0", padding:"20px" }}>
       <div style={{ maxWidth:"700px", margin:"0 auto" }}>
-        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 14px" }}>⚡ Join the Debate</p>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 14px" }}>⚡ Weigh In</p>
         {layers.map(layer=>{
           const myVote = votes[layer.key];
           const selected = options.find(o=>o.key===myVote);
+          const counts = stats?.[layer.key];
           return (
             <div key={layer.key} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"14px 16px", marginBottom:"10px" }}>
               <p style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 4px" }}>{layer.label}</p>
               <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#374151", margin:"0 0 12px" }}>{layer.question}</p>
               {!myVote ? (
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"8px" }}>
-                  {options.map(opt=>(
-                    <button key={opt.key} onClick={()=>vote(layer.key,opt.key)} style={{ padding:"9px 6px", background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:opt.color, cursor:"pointer" }}>
-                      {opt.emoji} {opt.label}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"8px" }}>
+                    {options.map(opt=>(
+                      <button key={opt.key} onClick={()=>vote(layer.key,opt.key)} style={{ padding:"9px 6px", background:opt.bg, border:`1px solid ${opt.border}`, borderRadius:"6px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:opt.color, cursor:"pointer" }}>
+                        {opt.emoji} {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  <VoteBars counts={counts} />
+                </>
               ) : (
                 <div style={{ background:selected.bg, border:`1px solid ${selected.border}`, borderRadius:"6px", padding:"10px 12px" }}>
                   <span style={{ fontFamily:"system-ui", fontSize:"12px", color:selected.color, fontWeight:"700" }}>You: {selected.label}{p?` · ${p.emoji} ${p.title}`:""}</span>
-                  <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", margin:"4px 0 0" }}>Community results will appear once real votes are connected.</p>
+                  <VoteBars counts={counts} />
                 </div>
               )}
             </div>
           );
         })}
-        <div style={{ background:"#0f172a", borderRadius:"8px", padding:"16px", textAlign:"center" }}>
-          <p style={{ fontFamily:"'Georgia',serif", fontSize:"14px", color:"#f8fafc", margin:"0 0 10px" }}>Arguing about this with someone?</p>
-          <button onClick={handleSettle} style={{ padding:"10px 24px", background:"#dc2626", border:"none", borderRadius:"6px", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", cursor:"pointer" }}>🕊️ Settle the Argument</button>
-          {settled && <div style={{ marginTop:"10px", background:"#1e293b", borderRadius:"6px", padding:"10px 14px" }}><p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", margin:"0 0 4px" }}>Copied! Share this:</p><p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#f8fafc", margin:0 }}>{shareMsg}</p></div>}
-        </div>
       </div>
     </div>
   );
@@ -642,12 +699,12 @@ function DebatePanel({ query, answer, persona, onBadgeEarned }) {
 
 // ── ANSWER PANEL ──────────────────────────────────────────────────────────────
 const RESULT_TABS = [
-  { key:"origin",   label:"Origin",   icon:"origin" },
-  { key:"sides",    label:"Sides",    icon:"sides" },
-  { key:"spread",   label:"Spread",   icon:"spread" },
-  { key:"debate",   label:"Debate",   icon:"debate" },
-  { key:"comments", label:"Talk",     icon:"comments" },
-  { key:"share",    label:"Share",    icon:"share" },
+  { key:"origin",  label:"Origin",  icon:"origin" },
+  { key:"sides",   label:"Sides",   icon:"sides" },
+  { key:"spread",  label:"Spread",  icon:"spread" },
+  { key:"vote",    label:"Vote",    icon:"vote" },
+  { key:"debate",  label:"Debate",  icon:"debate" },
+  { key:"sources", label:"Sources", icon:"sources" },
 ];
 
 function TabIcon({ name, color }) {
@@ -656,37 +713,54 @@ function TabIcon({ name, color }) {
     case "origin":
       return <svg {...common}><path d="M12 21s-7-6.2-7-12a7 7 0 0114 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>;
     case "sides":
-      return <svg {...common}><path d="M12 3v18"/><path d="M5 7h5M14 7h5"/><path d="M3 7l2-4 2 4-2 3-2-3z"/><path d="M17 7l2-4 2 4-2 3-2-3z"/></svg>;
+      return <svg {...common}><path d="M12 3v3M12 18v3"/><path d="M4 6h16"/><path d="M4 6l-2 6a4 4 0 008 0L8 6"/><path d="M20 6l-2 6a4 4 0 008 0l-2-6"/></svg>;
     case "spread":
-      return <svg {...common}><polyline points="3 17 9 11 13 15 21 7"/><polyline points="15 7 21 7 21 13"/></svg>;
-    case "debate":
-      return <svg {...common}><path d="M9 11l3 3L22 4"/><path d="M21 12v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h11"/></svg>;
-    case "comments":
-      return <svg {...common}><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>;
-    case "share":
       return <svg {...common}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
+    case "vote":
+      return <svg {...common}><path d="M9 11l3 3L22 4"/><path d="M21 12v6a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h11"/></svg>;
+    case "debate":
+      return <svg {...common}><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>;
+    case "sources":
+      return <svg {...common}><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/><path d="M14 2v6h6"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>;
     default:
       return null;
   }
 }
 
-function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, footerHeight }) {
+function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, sessionId, headerHeight }) {
   const [activeTab, setActiveTab] = useState("origin");
   if (!answer) return null;
+  const verdictText = VERDICT_MAP[answer.verdict]?.text || answer.verdict || "Disputed";
 
   return (
     <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
-      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"20px 24px 90px", minHeight:"240px" }}>
+      <div style={{ position:"sticky", top:`${headerHeight}px`, zIndex:80, background:"#0f172a", borderBottom:"1px solid #1e293b", boxShadow:"0 2px 10px rgba(0,0,0,0.4)" }}>
+        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex" }}>
+          {RESULT_TABS.map(tab=>{
+            const active = activeTab===tab.key;
+            const color = active ? "#fff" : "#64748b";
+            return (
+              <button key={tab.key} onClick={()=>setActiveTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderBottom:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
+                <TabIcon name={tab.icon} color={color} />
+                <span style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.06em", textTransform:"uppercase", color }}>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"20px 24px", minHeight:"240px" }}>
         {activeTab==="origin" && (
           <>
             <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
             </div>
-            <div>
+            <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
             </div>
+            <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
           </>
         )}
 
@@ -698,16 +772,17 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
                 <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.traditionalView}</p>
               </div>
               <div style={{ background:"#f8fafc", border:"1px solid #cbd5e1", borderRadius:"8px", padding:"14px 16px" }}>
-                <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#475569", margin:"0 0 6px" }}>👁 From The Other Side</h3>
+                <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#475569", margin:"0 0 6px" }}>👁 From That Side</h3>
                 <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.modernView}</p>
               </div>
             </div>
             {answer.commonGround && (
-              <div style={{ background:"#f0fdf4", border:"1px solid #86efac", borderRadius:"8px", padding:"14px 16px" }}>
+              <div style={{ background:"#f0fdf4", border:"1px solid #86efac", borderRadius:"8px", padding:"14px 16px", marginBottom:"20px" }}>
                 <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#16a34a", margin:"0 0 6px" }}>🤝 Where Both Sides Agree</h3>
                 <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#14532d", lineHeight:"1.65", margin:0 }}>{answer.commonGround}</p>
               </div>
             )}
+            <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
           </>
         )}
 
@@ -717,26 +792,34 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Spread</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.culturalSpread}</p>
             </div>
-            <div style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px" }}>
+            <div style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px", marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706", margin:"0 0 6px" }}>★ They Also Say…</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#92400e", lineHeight:"1.7", margin:0 }}>{answer.funFact}</p>
+            </div>
+            <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
+          </>
+        )}
+
+        {activeTab==="vote" && (
+          <>
+            <DebatePanel query={query} persona={persona} onBadgeEarned={onBadgeEarned} sessionId={sessionId} user={user} />
+            <div style={{ marginTop:"20px" }}>
+              <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
             </div>
           </>
         )}
 
         {activeTab==="debate" && (
-          <DebatePanel query={query} answer={answer} persona={persona} onBadgeEarned={onBadgeEarned} />
-        )}
-
-        {activeTab==="comments" && (
-          <CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} />
-        )}
-
-        {activeTab==="share" && (
           <>
-            <div style={{ marginBottom:"20px" }}>
-              <ShareButton query={query} verdict={answer.verdict||"DISPUTED"} />
+            <CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} />
+            <div style={{ marginTop:"4px" }}>
+              <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
             </div>
+          </>
+        )}
+
+        {activeTab==="sources" && (
+          <>
             {answer.sources?.length>0 && (
               <div style={{ marginBottom:"20px" }}>
                 <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 8px" }}>Sources</h3>
@@ -745,7 +828,8 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
                 </ul>
               </div>
             )}
-            <div style={{ textAlign:"center", padding:"16px 0 4px", borderTop:"1px solid #f1f5f9" }}>
+            <ShareButton query={query} verdict={verdictText} onBadgeEarned={onBadgeEarned} />
+            <div style={{ textAlign:"center", padding:"16px 0 4px", borderTop:"1px solid #f1f5f9", marginTop:"20px" }}>
               <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", color:"#94a3b8", fontStyle:"italic", margin:0 }}>
                 "WHOzTHEY? doesn't tell you what to think. We just find out who said it first."
               </p>
@@ -753,31 +837,15 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
           </>
         )}
       </div>
-
-      <div style={{ position:"fixed", left:0, right:0, bottom:`${footerHeight}px`, zIndex:90, background:"#0f172a", borderTop:"1px solid #1e293b", boxShadow:"0 -2px 10px rgba(0,0,0,0.4)" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex" }}>
-          {RESULT_TABS.map(tab=>{
-            const active = activeTab===tab.key;
-            const color = active ? "#fff" : "#64748b";
-            return (
-              <button key={tab.key} onClick={()=>setActiveTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderTop:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
-                <TabIcon name={tab.icon} color={color} />
-                <span style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.06em", textTransform:"uppercase", color }}>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </section>
   );
 }
 
 // ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
-function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, onHeightChange }) {
+function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSignal }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [trendingSearches, setTrendingSearches] = useState([]);
-  const footerRef = useRef(null);
 
   useEffect(() => {
     let alive = true;
@@ -785,17 +853,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, onHeightCha
       .then(rows => { if (alive) setTrendingSearches(rows); })
       .catch(() => { if (alive) setTrendingSearches([]); });
     return () => { alive = false; };
-  }, []);
-
-  useEffect(() => {
-    if (!footerRef.current || !onHeightChange) return;
-    const el = footerRef.current;
-    const report = () => onHeightChange(el.offsetHeight);
-    report();
-    const ro = new ResizeObserver(report);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [onHeightChange]);
+  }, [refreshSignal]);
 
   const carouselItems = useMemo(() => buildCarousel(trendingSearches), [trendingSearches]);
   const item = carouselItems[current % carouselItems.length];
@@ -824,7 +882,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, onHeightCha
   }
 
   return (
-    <footer ref={footerRef} style={{ background:"#0f172a", position:"sticky", bottom:0, zIndex:40, boxShadow:"0 -4px 16px rgba(0,0,0,0.5)" }}>
+    <footer style={{ background:"#0f172a", position:"sticky", bottom:0, zIndex:40, boxShadow:"0 -4px 16px rgba(0,0,0,0.5)" }}>
       <div style={{ maxWidth:"760px", margin:"0 auto" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"6px 12px" }}>
           <button onClick={prev} aria-label="Previous footer item" style={{ background:"none", border:"none", cursor:"pointer", color:"#fff", fontSize:"22px", padding:"0 8px", lineHeight:1, fontWeight:"300" }}>‹</button>
@@ -996,14 +1054,24 @@ function _OldMarketplace_UNUSED() {
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract, query, verdict }) {
+function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract, query, verdict, onHeightChange }) {
   const [claim, setClaim] = useState("");
+  const headerRef = useRef(null);
   useEffect(() => { setClaim(query || ""); }, [query]);
+  useEffect(() => {
+    if (!headerRef.current || !onHeightChange) return;
+    const el = headerRef.current;
+    const report = () => onHeightChange(el.offsetHeight);
+    report();
+    const ro = new ResizeObserver(report);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [onHeightChange]);
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
 
   return (
-    <header style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
+    <header ref={headerRef} style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
 
       {/* Row 1: "Type a claim..." + icons */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"8px" }}>
@@ -1011,10 +1079,10 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
           Type a claim below<br/>to see who <span style={{ color:"#dc2626" }}>"they"</span> are
         </span>
         <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
-          {/* Share */}
-          <button onClick={()=>{ if(navigator.share) navigator.share({title:"WHOzTHEY?",url:"https://whozthey.com"}); else navigator.clipboard?.writeText("https://whozthey.com"); }} style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Share</span>
+          {/* Personality Test */}
+          <button onClick={onQuizRequest} title="Find your WHOzTHEY? personality" aria-label="Take the personality test" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.6 6.6L21 11l-6.4 2.4L12 20l-2.6-6.6L3 11l6.4-2.4z"/></svg>
+            <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Quiz</span>
           </button>
           {/* Reset */}
           <button onClick={()=>{ setClaim(""); onResetSearch?.(); }} title="Reset search" aria-label="Reset search" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
@@ -1182,7 +1250,7 @@ export default function WHOzTHEY() {
   const [loadingStage, setLoadingStage] = useState("clarify");
   const [error, setError]             = useState(null);
   const [selectedSponsor, setSelectedSponsor] = useState(null);
-  const [footerHeight, setFooterHeight] = useState(118);
+  const [headerHeight, setHeaderHeight] = useState(110);
   const [searchCount, setSearchCount] = useState(0);
   const [sessionId, setSessionId]     = useState(null);
   const answerRef                     = useRef(null);
@@ -1201,6 +1269,13 @@ export default function WHOzTHEY() {
     return onAuthStateChanged(auth, firebaseUser => {
       setUser(appUserFromFirebase(firebaseUser));
     });
+  }, []);
+
+  // Deep link: a shared result URL like /?q=claim opens straight into that result.
+  useEffect(() => {
+    const sharedClaim = new URLSearchParams(window.location.search).get("q");
+    if (sharedClaim && sharedClaim.trim()) handleSearch(sharedClaim.trim());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -1245,7 +1320,12 @@ export default function WHOzTHEY() {
     earnBadge("first_search");
     if (newCount>=3) earnBadge("streak_3");
     if (newCount>=5) earnBadge("five_searches");
-    try { setAnswer(await fetchAnswer(claim, { sessionId, firebaseUid: user?.uid })); }
+    try {
+      setAnswer(await fetchAnswer(claim, { sessionId, firebaseUid: user?.uid }));
+      const url = new URL(window.location.href);
+      url.searchParams.set("q", claim);
+      window.history.replaceState(null, "", url.toString());
+    }
     catch { setError("They say the answer is out there — but we hit an error. Please try again."); }
     finally { setLoading(false); setClarification(null); }
   }
@@ -1257,7 +1337,12 @@ export default function WHOzTHEY() {
     runSearch(claim);
   }
 
-  function handleClear() { setQuery(""); setAnswer(null); setError(null); setClarification(null); setSelectedSponsor(null); }
+  function handleClear() {
+    setQuery(""); setAnswer(null); setError(null); setClarification(null); setSelectedSponsor(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete("q");
+    window.history.replaceState(null, "", url.toString());
+  }
 
   function handleResetFromHeader() {
     setActiveTab("search");
@@ -1289,7 +1374,7 @@ export default function WHOzTHEY() {
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} verdict={verdict} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} verdict={verdict} onHeightChange={setHeaderHeight} />
 
 
 
@@ -1311,7 +1396,7 @@ export default function WHOzTHEY() {
               <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
             )}
             {answer&&!loading&&!selectedSponsor&&(
-              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} footerHeight={footerHeight} />
+              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} headerHeight={headerHeight} sessionId={sessionId} />
             )}
           </div>
           {isWelcome&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
@@ -1323,7 +1408,7 @@ export default function WHOzTHEY() {
 
 
       {/* Sticky Footer Fun Facts */}
-      <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} onHeightChange={setFooterHeight} />
+      <FunFactsSection onSearch={handleSearch} onSponsorSelect={handleSponsorSelect} onBadgeEarned={earnBadge} refreshSignal={searchCount} />
 
       {showLogin&&<LoginModal onClose={()=>setShowLogin(false)} currentUser={user} onLogin={u=>{ setUser(u); setShowPersona(true); }} onLogout={()=>{ setUser(null); }} />}
       {showQuiz&&(
