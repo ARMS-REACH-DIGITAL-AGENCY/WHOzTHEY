@@ -645,6 +645,23 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
   const [showDebate, setShowDebate] = useState(false);
   if (!answer) return null;
   const vc = VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED;
+
+  function jumpTo(id, openDebate) {
+    if (openDebate) setShowDebate(true);
+    requestAnimationFrame(()=>{
+      document.getElementById(id)?.scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+  }
+
+  const jumpLinks = [
+    { id:"jump-origin",   label:"Origin" },
+    { id:"jump-sides",    label:"Both Sides" },
+    { id:"jump-spread",   label:"How It Spread" },
+    { id:"jump-funfact",  label:"Fun Fact" },
+    { id:"jump-debate",   label:"⚡ Vote / Debate", openDebate:true },
+    { id:"jump-comments", label:"💬 Comments" },
+  ];
+
   return (
     <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
       <div style={{ background:vc.bg, borderBottom:`1px solid ${vc.border}`, padding:"20px 24px" }}>
@@ -654,9 +671,16 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
           <span style={{ display:"inline-block", padding:"4px 12px", borderRadius:"20px", background:vc.badge, color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.08em", textTransform:"uppercase" }}>{vc.label}</span>
         </div>
       </div>
+      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"12px 24px", display:"flex", gap:"8px", overflowX:"auto", borderBottom:"1px solid #f1f5f9", WebkitOverflowScrolling:"touch" }}>
+        {jumpLinks.map(link=>(
+          <button key={link.id} onClick={()=>jumpTo(link.id, link.openDebate)} style={{ flexShrink:0, padding:"7px 14px", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"20px", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", color:"#334155", cursor:"pointer", whiteSpace:"nowrap" }}>
+            {link.label}
+          </button>
+        ))}
+      </div>
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px" }}>
         {/* WHO is "they" */}
-        <div style={{ marginBottom:"20px" }}>
+        <div id="jump-origin" style={{ marginBottom:"20px" }}>
           <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
           <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
         </div>
@@ -666,7 +690,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
         </div>
 
         {/* Two sides of the hand */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
+        <div id="jump-sides" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"20px" }}>
           <div style={{ background:"#f0f9ff", border:"1px solid #7dd3fc", borderRadius:"8px", padding:"14px 16px" }}>
             <h3 style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#0284c7", margin:"0 0 6px" }}>👁 From This Side</h3>
             <p style={{ fontFamily:"system-ui", fontSize:"12px", color:"#0f172a", lineHeight:"1.65", margin:0 }}>{answer.traditionalView}</p>
@@ -686,13 +710,13 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
         )}
 
         {/* Cultural spread */}
-        <div style={{ background:"#f8fafc", borderRadius:"8px", padding:"16px 20px", borderLeft:"3px solid #dc2626", marginBottom:"20px" }}>
+        <div id="jump-spread" style={{ background:"#f8fafc", borderRadius:"8px", padding:"16px 20px", borderLeft:"3px solid #dc2626", marginBottom:"20px" }}>
           <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Spread</h3>
           <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.culturalSpread}</p>
         </div>
 
         {/* Fun fact */}
-        <div style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px", marginBottom:"20px" }}>
+        <div id="jump-funfact" style={{ background:"#fffbeb", border:"1px solid #fde68a", borderRadius:"8px", padding:"16px 20px", marginBottom:"20px" }}>
           <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706", margin:"0 0 6px" }}>★ They Also Say…</h3>
           <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#92400e", lineHeight:"1.7", margin:0 }}>{answer.funFact}</p>
         </div>
@@ -715,13 +739,13 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
           <ShareButton query={query} verdict={answer.verdict||"DISPUTED"} />
         </div>
         {!showDebate && (
-          <button onClick={()=>setShowDebate(true)} style={{ width:"100%", padding:"14px", background:"#0f172a", border:"none", borderRadius:"8px", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px" }}>
+          <button id="jump-debate" onClick={()=>setShowDebate(true)} style={{ width:"100%", padding:"14px", background:"#0f172a", border:"none", borderRadius:"8px", fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#fff", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"8px" }}>
             ⚡ Do you agree? Join the Debate
           </button>
         )}
       </div>
-      {showDebate && <DebatePanel query={query} answer={answer} persona={persona} onBadgeEarned={onBadgeEarned} />}
-      <CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} />
+      {showDebate && <div id="jump-debate"><DebatePanel query={query} answer={answer} persona={persona} onBadgeEarned={onBadgeEarned} /></div>}
+      <div id="jump-comments"><CommentsSection claim={query} user={user} onLoginRequest={onLoginRequest} /></div>
     </section>
   );
 }
