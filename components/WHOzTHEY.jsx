@@ -958,7 +958,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
     <header style={{ background:"#0f172a", position:"sticky", top:0, zIndex:100, boxShadow:"0 2px 12px rgba(0,0,0,0.5)" }}>
 
       {/* Row 1: "Type a claim..." + icons */}
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 16px 8px", gap:"12px" }}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"10px" }}>
         <span style={{ fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#f8fafc", letterSpacing:"-0.2px", lineHeight:1.25 }}>
           Type a claim below to see who <span style={{ color:"#dc2626" }}>"THEY"</span> is.
         </span>
@@ -989,10 +989,10 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
         </div>
       </div>
 
-      {/* Row 2: custom search input + WHOzTHEY submit button */}
-      <div style={{ padding:"8px 16px 12px" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
-          <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"4px 8px", padding:"12px 16px", background:"#1e293b", border:"1px solid #334155", borderRadius:"8px" }}>
+      {/* Row 2: custom search input + WHOzTHEY submit button (same card treatment as the footer carousel row) */}
+      <div style={{ padding:"6px 14px 10px" }}>
+        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 12px", display:"flex", alignItems:"center", gap:"10px", boxSizing:"border-box" }}>
+          <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"4px 8px" }}>
             <span style={{ fontFamily:"'Georgia',serif", fontStyle:"italic", fontWeight:"700", color:"#dc2626", fontSize:"15px", whiteSpace:"nowrap" }}>"THEY" say,</span>
             <input
               type="text" value={claim}
@@ -1045,12 +1045,12 @@ function WelcomeState({ onSearch, onStoreClick }) {
     <div style={{ background:"#ffffff" }}>
 
       {/* Explainer: The Truth, Origin, and Curiosity Engine */}
-      <div style={{ padding:"24px 20px 32px", maxWidth:"680px", margin:"0 auto" }}>
-        <div style={{ borderRadius:"16px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)" }}>
+      <div style={{ padding:"16px 16px 20px", maxWidth:"680px", margin:"0 auto" }}>
+        <div style={{ borderRadius:"14px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)" }}>
           <img src="/explainer-engine.jpg" alt="The Truth, Origin, and Curiosity Engine — how WHOzTHEY? works in three steps" style={{ width:"100%", display:"block" }} />
         </div>
         {/* Video placeholder — swap for the explainer video embed when ready */}
-        <div style={{ marginTop:"10px", textAlign:"center" }}>
+        <div style={{ marginTop:"8px", textAlign:"center" }}>
           <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", letterSpacing:"0.04em" }}>
             🎬 Explainer video coming soon
           </span>
@@ -1058,25 +1058,25 @@ function WelcomeState({ onSearch, onStoreClick }) {
       </div>
 
       {/* Swag Store promo */}
-      <div style={{ background:"#0f172a", padding:"28px 20px 32px" }}>
+      <div style={{ background:"#0f172a", padding:"18px 16px 20px" }}>
         <div style={{ maxWidth:"680px", margin:"0 auto" }}>
-          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:"16px", flexWrap:"wrap", marginBottom:"20px" }}>
-            <p style={{ fontFamily:"'Georgia',serif", fontSize:"16px", fontWeight:"700", color:"#dc2626", margin:0, lineHeight:1.4, flex:"1 1 240px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px", marginBottom:"16px" }}>
+            <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#dc2626", margin:0, lineHeight:1.35, flex:1, minWidth:0 }}>
               "THEY" SAY WHOzTHEY? SWAG CAN MAKE A GREAT GIFT FOR THE 'KNOWNIT ALL' IN YOUR LIFE!
             </p>
-            <button onClick={onStoreClick} style={{ flexShrink:0, padding:"12px 20px", background:"#dc2626", border:"none", borderRadius:"8px", color:"#fff", fontFamily:"system-ui", fontSize:"13px", fontWeight:"700", letterSpacing:"0.04em", cursor:"pointer", boxShadow:"0 2px 0 rgba(0,0,0,0.3)" }}>
+            <button onClick={onStoreClick} style={{ flexShrink:0, padding:"10px 14px", background:"#dc2626", border:"none", borderRadius:"8px", color:"#fff", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.03em", cursor:"pointer", boxShadow:"0 2px 0 rgba(0,0,0,0.3)", whiteSpace:"nowrap" }}>
               SHOP OUR SWAG SHOP
             </button>
           </div>
 
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:"12px" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:"8px" }}>
             {[
               { src:"/swag-hat-navy.jpg", alt:"WHOzTHEY? navy trucker hat" },
               { src:"/swag-hoodie-pink.jpg", alt:'"Hello I\'m THEY" pink hoodie' },
               { src:"/swag-hat-red-bs.jpg", alt:'"I Call Bullshit" red trucker hat' },
             ].map(item => (
-              <button key={item.src} onClick={onStoreClick} style={{ background:"#fff", border:"none", borderRadius:"10px", padding:"8px", cursor:"pointer", overflow:"hidden" }}>
-                <img src={item.src} alt={item.alt} style={{ width:"100%", display:"block", borderRadius:"6px" }} />
+              <button key={item.src} onClick={onStoreClick} style={{ background:"#fff", border:"none", borderRadius:"10px", padding:"6px", cursor:"pointer", overflow:"hidden" }}>
+                <img src={item.src} alt={item.alt} style={{ width:"100%", aspectRatio:"1/1", objectFit:"cover", display:"block", borderRadius:"6px" }} />
               </button>
             ))}
           </div>
