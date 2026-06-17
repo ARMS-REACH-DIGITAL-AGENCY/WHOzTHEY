@@ -959,8 +959,8 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
       {/* Row 1: "Type a claim..." + icons */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 14px 6px", gap:"8px" }}>
-        <span style={{ fontFamily:"system-ui", fontSize:"7px", fontWeight:"700", color:"#f8fafc", letterSpacing:"0.04em", lineHeight:1.5 }}>
-          TYPE A CLAIM BELOW<br/>TO SEE WHO <span style={{ color:"#dc2626" }}>"THEY"</span> ARE
+        <span style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", lineHeight:1.6 }}>
+          Type a claim below<br/>to see who <span style={{ color:"#dc2626" }}>"they"</span> are
         </span>
         <div style={{ display:"flex", alignItems:"center", gap:"14px" }}>
           {/* Share */}
@@ -993,7 +993,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
       <div style={{ padding:"6px 14px 10px" }}>
         <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"6px 10px", display:"flex", alignItems:"center", gap:"8px", boxSizing:"border-box" }}>
           <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"3px 6px" }}>
-            <span style={{ fontFamily:"'Georgia',serif", fontStyle:"italic", fontWeight:"700", color:"#dc2626", fontSize:"13px", whiteSpace:"nowrap" }}>"THEY" say,</span>
+            <span style={{ fontFamily:"system-ui", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", fontSize:"10px", whiteSpace:"nowrap" }}>"they" say,</span>
             <input
               type="text" value={claim}
               autoFocus
