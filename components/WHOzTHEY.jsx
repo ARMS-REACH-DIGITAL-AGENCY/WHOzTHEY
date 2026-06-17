@@ -1031,6 +1031,17 @@ function WelcomeState({ onSearch }) {
       {/* Tagline */}
       <p style={{
         fontFamily:"system-ui",
+        fontSize:"20px",
+        fontWeight:"700",
+        color:"#1e293b",
+        textAlign:"center",
+        margin:"0 0 8px",
+        letterSpacing:"-0.01em",
+      }}>
+        Tracing the Origin of Everything <span style={{ color:"#dc2626" }}>"They"</span> Ever Said
+      </p>
+      <p style={{
+        fontFamily:"system-ui",
         fontSize:"12px",
         color:"#94a3b8",
         textAlign:"center",
