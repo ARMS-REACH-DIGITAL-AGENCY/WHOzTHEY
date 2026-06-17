@@ -735,7 +735,6 @@ function AnswerPanel({ query, answer, onClear, persona, onBadgeEarned, user, onL
 function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [buttonHover, setButtonHover] = useState(false);
   const [trendingSearches, setTrendingSearches] = useState([]);
 
   useEffect(() => {
@@ -791,8 +790,6 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
           </button>
           <button
             onClick={openItem}
-            onMouseEnter={()=>setButtonHover(true)}
-            onMouseLeave={()=>setButtonHover(false)}
             aria-label="Open this WHOzTHEY result"
             className="whoz-submit-btn"
             style={{
@@ -800,18 +797,17 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned }) {
               overflow:"hidden",
               flexShrink:0,
               padding:"7px 9px",
-              background:buttonHover?"#dc2626":"#0f172a",
-              border:buttonHover?"1px solid #fca5a5":"1px solid #475569",
+              background:"linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
+              border:"1px solid #334155",
               borderRadius:"9px",
               cursor:"pointer",
-              boxShadow:buttonHover?"0 0 0 3px rgba(220,38,38,0.25)":"0 2px 0 rgba(0,0,0,0.4)",
-              transition:"all 0.15s ease",
+              boxShadow:"inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 3px rgba(0,0,0,0.4), 0 2px 0 rgba(0,0,0,0.45)",
               display:"flex",
               alignItems:"center",
               justifyContent:"center"
             }}
           >
-            <img src={buttonHover ? "/logo_blue_z.png" : "/logo.png"} alt="WHOzTHEY?" style={{ height:"36px", width:"auto", display:"block" }} />
+            <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"36px", width:"auto", display:"block" }} />
           </button>
         </div>
 
@@ -948,9 +944,8 @@ function _OldMarketplace_UNUSED() {
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch }) {
+function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract }) {
   const [claim, setClaim] = useState("");
-  const [submitHover, setSubmitHover] = useState(false);
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
   const p = persona ? PERSONAS[persona] : null;
 
@@ -991,8 +986,8 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
       {/* Row 2: custom search input + WHOzTHEY submit button (same card treatment as the footer carousel row) */}
       <div style={{ padding:"6px 14px 10px" }}>
-        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"6px 10px", display:"flex", alignItems:"center", gap:"8px", boxSizing:"border-box" }}>
-          <div style={{ flex:1, minWidth:0, display:"flex", alignItems:"center", flexWrap:"wrap", gap:"3px 6px" }}>
+        <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 10px", display:"flex", alignItems:"center", gap:"8px", boxSizing:"border-box" }}>
+          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"2px" }}>
             <span style={{ fontFamily:"system-ui", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", fontSize:"10px", whiteSpace:"nowrap" }}>"they" say,</span>
             <input
               type="text" value={claim}
@@ -1000,36 +995,33 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               onChange={e=>setClaim(e.target.value)}
               onKeyDown={e=>e.key==="Enter"&&submit()}
               aria-label="Search a claim"
-              style={{ flex:1, minWidth:"100px", padding:0, background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"13px", color:"#f8fafc", caretColor:"#f8fafc" }}
+              style={{ width:"100%", padding:0, background:"transparent", border:"none", outline:"none", fontFamily:"system-ui", fontSize:"13px", color:"#f8fafc", caretColor:"#f8fafc" }}
             />
           </div>
           <button
             onClick={submit}
             disabled={loading||!claim.trim()}
-            onMouseEnter={()=>setSubmitHover(true)}
-            onMouseLeave={()=>setSubmitHover(false)}
             aria-label="Search WHOzTHEY?"
-            className="whoz-submit-btn"
+            className={attract&&!loading ? "whoz-submit-btn" : ""}
             style={{
               position:"relative",
               overflow:"hidden",
               flexShrink:0,
               padding:"5px 7px",
-              background:submitHover&&!loading&&claim.trim()?"#dc2626":"#0f172a",
-              border:submitHover&&!loading&&claim.trim()?"1px solid #fca5a5":"1px solid #475569",
-              borderRadius:"8px",
+              background:"linear-gradient(180deg, #1e293b 0%, #0f172a 100%)",
+              border:"1px solid #334155",
+              borderRadius:"9px",
               cursor:loading?"wait":claim.trim()?"pointer":"not-allowed",
               opacity:loading?0.55:1,
               display:"flex",
               alignItems:"center",
               justifyContent:"center",
-              transition:"all 0.15s ease",
-              boxShadow: submitHover&&!loading&&claim.trim() ? "0 0 0 3px rgba(220,38,38,0.25)" : "0 2px 0 rgba(0,0,0,0.4)",
+              boxShadow:"inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 3px rgba(0,0,0,0.4), 0 2px 0 rgba(0,0,0,0.45)",
             }}
           >
             {loading
               ? <span style={{ width:"16px", height:"16px", border:"2px solid #475569", borderTopColor:"transparent", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" }} />
-              : <img src={submitHover&&!loading&&claim.trim() ? "/logo_blue_z.png" : "/logo.png"} alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
+              : <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
             }
           </button>
         </div>
@@ -1058,14 +1050,14 @@ function WelcomeState({ onSearch, onStoreClick }) {
       </div>
 
       {/* Swag Store promo */}
-      <div style={{ background:"#0f172a", padding:"18px 16px 20px" }}>
+      <div style={{ background:"#ffffff", borderTop:"1px solid #e2e8f0", padding:"20px 16px 24px" }}>
         <div style={{ maxWidth:"680px", margin:"0 auto" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px", marginBottom:"16px" }}>
-            <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", fontWeight:"700", color:"#dc2626", margin:0, lineHeight:1.35, flex:1, minWidth:0 }}>
-              "THEY" SAY WHOzTHEY? SWAG CAN MAKE A GREAT GIFT FOR THE 'KNOWNIT ALL' IN YOUR LIFE!
+            <p style={{ fontFamily:"system-ui", fontSize:"13px", fontWeight:"600", color:"#0f172a", margin:0, lineHeight:1.4, flex:1, minWidth:0 }}>
+              <span style={{ color:"#dc2626", fontWeight:"700" }}>"They" say</span> WHOzTHEY? swag makes a great gift for the 'know-it-all' in your life.
             </p>
-            <button onClick={onStoreClick} style={{ flexShrink:0, padding:"10px 14px", background:"#dc2626", border:"none", borderRadius:"8px", color:"#fff", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.03em", cursor:"pointer", boxShadow:"0 2px 0 rgba(0,0,0,0.3)", whiteSpace:"nowrap" }}>
-              SHOP OUR SWAG SHOP
+            <button onClick={onStoreClick} style={{ flexShrink:0, padding:"10px 14px", background:"#dc2626", border:"none", borderRadius:"8px", color:"#fff", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.03em", cursor:"pointer", boxShadow:"0 2px 0 rgba(0,0,0,0.15)", whiteSpace:"nowrap" }}>
+              Shop our swag shop
             </button>
           </div>
 
@@ -1075,7 +1067,7 @@ function WelcomeState({ onSearch, onStoreClick }) {
               { src:"/swag-hoodie-pink.jpg", alt:'"Hello I\'m THEY" pink hoodie' },
               { src:"/swag-hat-red-bs.jpg", alt:'"I Call Bullshit" red trucker hat' },
             ].map(item => (
-              <button key={item.src} onClick={onStoreClick} style={{ background:"#fff", border:"none", borderRadius:"10px", padding:"6px", cursor:"pointer", overflow:"hidden" }}>
+              <button key={item.src} onClick={onStoreClick} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:"10px", padding:"6px", cursor:"pointer", overflow:"hidden" }}>
                 <img src={item.src} alt={item.alt} style={{ width:"100%", aspectRatio:"1/1", objectFit:"cover", display:"block", borderRadius:"6px" }} />
               </button>
             ))}
@@ -1237,9 +1229,11 @@ export default function WHOzTHEY() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { window.__whoztheySearch = handleSearch; });
 
+  const isWelcome = !loading&&!answer&&!error&&!clarification&&!selectedSponsor;
+
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} />
 
 
 
@@ -1264,7 +1258,7 @@ export default function WHOzTHEY() {
               <AnswerPanel query={query} answer={answer} onClear={handleClear} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} />
             )}
           </div>
-          {!loading&&!answer&&!error&&!clarification&&!selectedSponsor&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
+          {isWelcome&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
 
         </>
       )}
