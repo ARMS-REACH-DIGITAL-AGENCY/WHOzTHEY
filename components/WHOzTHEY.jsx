@@ -673,21 +673,10 @@ function TabIcon({ name, color }) {
 function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, footerHeight }) {
   const [activeTab, setActiveTab] = useState("origin");
   if (!answer) return null;
-  const vc = VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED;
 
   return (
     <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
-      <div style={{ background:vc.bg, borderBottom:`1px solid ${vc.border}`, padding:"14px 24px" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex", alignItems:"center", gap:"14px" }}>
-          <span role="img" aria-label={vc.text} style={{ fontSize:"36px", lineHeight:1, flexShrink:0 }}>{vc.emoji}</span>
-          <div>
-            <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 2px" }}>The Verdict</p>
-            <p style={{ fontFamily:"system-ui", fontSize:"16px", fontWeight:"700", letterSpacing:"0.02em", color:vc.badge, margin:0 }}>{vc.text}</p>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px", minHeight:"240px" }}>
+      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"20px 24px 90px", minHeight:"240px" }}>
         {activeTab==="origin" && (
           <>
             <div style={{ marginBottom:"20px" }}>
@@ -765,7 +754,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
         )}
       </div>
 
-      <div style={{ position:"sticky", bottom:`${footerHeight}px`, zIndex:41, background:"#0f172a", borderTop:"1px solid #1e293b", boxShadow:"0 -2px 10px rgba(0,0,0,0.4)" }}>
+      <div style={{ position:"fixed", left:0, right:0, bottom:`${footerHeight}px`, zIndex:90, background:"#0f172a", borderTop:"1px solid #1e293b", boxShadow:"0 -2px 10px rgba(0,0,0,0.4)" }}>
         <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex" }}>
           {RESULT_TABS.map(tab=>{
             const active = activeTab===tab.key;
@@ -1007,7 +996,7 @@ function _OldMarketplace_UNUSED() {
 }
 
 // ── HERO ──────────────────────────────────────────────────────────────────────
-function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract, query }) {
+function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest, onStoreClick, onResetSearch, attract, query, verdict }) {
   const [claim, setClaim] = useState("");
   useEffect(() => { setClaim(query || ""); }, [query]);
   function submit() { if (claim.trim()&&!loading) onSearch(claim.trim()); }
@@ -1083,7 +1072,11 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               boxShadow:"inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 3px rgba(0,0,0,0.4), 0 2px 0 rgba(0,0,0,0.45)",
             }}
           >
-            <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
+            {verdict ? (
+              <span role="img" aria-label={verdict.text} title={verdict.text} style={{ fontSize:"24px", lineHeight:1, display:"block" }}>{verdict.emoji}</span>
+            ) : (
+              <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
+            )}
           </button>
         </div>
       </div>
@@ -1292,10 +1285,11 @@ export default function WHOzTHEY() {
   useEffect(() => { window.__whoztheySearch = handleSearch; });
 
   const isWelcome = !loading&&!answer&&!error&&!clarification&&!selectedSponsor;
+  const verdict = answer&&!loading ? (VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED) : null;
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} verdict={verdict} />
 
 
 
