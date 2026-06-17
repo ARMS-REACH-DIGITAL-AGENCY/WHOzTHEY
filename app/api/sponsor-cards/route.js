@@ -12,6 +12,7 @@ const DEFAULT_SPONSOR_CARDS = [
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
     ctaLabel: 'Claim Your Voucher →',
     accentColor: '#0284c7',
+    linkMode: 'direct',
   },
   {
     sponsorName: 'YatStats',
@@ -100,6 +101,7 @@ async function ensureSponsorTables(sql) {
       cta_label text,
       cta_url text,
       accent_color text,
+      link_mode text not null default 'panel',
       is_active boolean not null default false,
       starts_at timestamptz,
       ends_at timestamptz,
@@ -107,6 +109,8 @@ async function ensureSponsorTables(sql) {
       updated_at timestamptz not null default now()
     )
   `
+
+  await sql`alter table sponsor_cards add column if not exists link_mode text not null default 'panel'`
 }
 
 async function seedDefaultSponsors(sql) {
@@ -144,8 +148,8 @@ async function seedDefaultSponsors(sql) {
 
     if (existingCards.length === 0) {
       await sql`
-        insert into sponsor_cards (sponsor_id, teaser, body, cta_label, cta_url, accent_color, is_active)
-        values (${existingSponsor.id}, ${card.teaser}, ${card.body}, ${card.ctaLabel}, ${card.ctaUrl}, ${card.accentColor}, true)
+        insert into sponsor_cards (sponsor_id, teaser, body, cta_label, cta_url, accent_color, link_mode, is_active)
+        values (${existingSponsor.id}, ${card.teaser}, ${card.body}, ${card.ctaLabel}, ${card.ctaUrl}, ${card.accentColor}, ${card.linkMode || 'panel'}, true)
       `
     } else {
       await sql`
@@ -156,6 +160,7 @@ async function seedDefaultSponsors(sql) {
           cta_label = ${card.ctaLabel},
           cta_url = ${card.ctaUrl},
           accent_color = ${card.accentColor},
+          link_mode = ${card.linkMode || 'panel'},
           is_active = true,
           updated_at = now()
         where sponsor_id in (select id from sponsors where sponsor_name = ${card.sponsorName})
@@ -176,6 +181,7 @@ function mapSponsorCard(row) {
     cta: row.cta_label || 'Learn More →',
     ctaUrl: row.cta_url || row.sponsor_cta_url || row.website_url || 'https://whozthey.com',
     accent: row.accent_color || '#dc2626',
+    linkMode: row.link_mode || 'panel',
   }
 }
 
@@ -193,6 +199,7 @@ export async function GET() {
         sc.cta_label,
         sc.cta_url,
         sc.accent_color,
+        sc.link_mode,
         s.sponsor_name,
         s.website_url,
         s.cta_url as sponsor_cta_url
