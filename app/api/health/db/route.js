@@ -33,13 +33,9 @@ export async function GET() {
       order by table_name
     `;
 
-    const visitors = await sql`select session_id, firebase_uid, email, display_name, persona, source, created_at, updated_at from visitors order by created_at desc limit 10`;
-
     return Response.json({
       ok: true,
       tables: rows.map((row) => row.table_name),
-      visitorCount: visitors.length,
-      visitors,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
