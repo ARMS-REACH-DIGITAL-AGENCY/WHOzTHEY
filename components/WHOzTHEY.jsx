@@ -159,7 +159,8 @@ const SPONSOR_ADS = [
 
 // Interleave sponsor ads every 4 cards. Real trending searches (when available)
 // lead the rotation; seed facts fill the rest.
-function buildCarousel(trending = []) {
+function buildCarousel(trending = [], sponsorAds = SPONSOR_ADS) {
+  const ads = sponsorAds.length ? sponsorAds : SPONSOR_ADS;
   const trendingItems = trending.map((row, i) => ({
     isSponsor: false,
     isTrending: true,
@@ -173,7 +174,7 @@ function buildCarousel(trending = []) {
   pool.forEach((entry, i) => {
     items.push(entry);
     if ((i + 1) % 4 === 0) {
-      const ad = SPONSOR_ADS[Math.floor((i + 1) / 4 - 1) % SPONSOR_ADS.length];
+      const ad = ads[Math.floor((i + 1) / 4 - 1) % ads.length];
       items.push(ad);
     }
   });
@@ -224,6 +225,13 @@ async function fetchRecentSearches() {
   if (!res.ok) return [];
   const data = await res.json();
   return Array.isArray(data.searches) ? data.searches : [];
+}
+
+async function fetchSponsorCards() {
+  const res = await fetch("/api/sponsor-cards", { cache: "no-store" });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data.sponsorCards) ? data.sponsorCards : [];
 }
 
 const VERDICT_MAP = {
@@ -846,6 +854,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
   const [trendingSearches, setTrendingSearches] = useState([]);
+  const [sponsorAds, setSponsorAds] = useState(SPONSOR_ADS);
 
   useEffect(() => {
     let alive = true;
@@ -855,7 +864,15 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
     return () => { alive = false; };
   }, [refreshSignal]);
 
-  const carouselItems = useMemo(() => buildCarousel(trendingSearches), [trendingSearches]);
+  useEffect(() => {
+    let alive = true;
+    fetchSponsorCards()
+      .then(cards => { if (alive && cards.length) setSponsorAds(cards); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const carouselItems = useMemo(() => buildCarousel(trendingSearches, sponsorAds), [trendingSearches, sponsorAds]);
   const item = carouselItems[current % carouselItems.length];
   const total = carouselItems.length;
 
