@@ -641,22 +641,17 @@ function DebatePanel({ query, answer, persona, onBadgeEarned }) {
 }
 
 // ── ANSWER PANEL ──────────────────────────────────────────────────────────────
-function AnswerPanel({ query, answer, onClear, persona, onBadgeEarned, user, onLoginRequest }) {
+function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest }) {
   const [showDebate, setShowDebate] = useState(false);
   if (!answer) return null;
   const vc = VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED;
   return (
     <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
       <div style={{ background:vc.bg, borderBottom:`1px solid ${vc.border}`, padding:"20px 24px" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"12px" }}>
-          <div>
-            <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 4px" }}>They say…</p>
-            <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"20px", fontWeight:"700", color:"#0f172a", margin:0, lineHeight:1.3 }}>"{query}"</h2>
-          </div>
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"8px", flexShrink:0 }}>
-            <span style={{ display:"inline-block", padding:"4px 12px", borderRadius:"20px", background:vc.badge, color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.08em", textTransform:"uppercase" }}>{vc.label}</span>
-            <button onClick={onClear} style={{ background:"none", border:"1px solid #cbd5e1", borderRadius:"4px", color:"#64748b", fontSize:"11px", fontFamily:"system-ui", padding:"3px 10px", cursor:"pointer" }}>New search ✕</button>
-          </div>
+        <div style={{ maxWidth:"760px", margin:"0 auto" }}>
+          <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#94a3b8", margin:"0 0 4px" }}>They say…</p>
+          <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"20px", fontWeight:"700", color:"#0f172a", margin:"0 0 10px", lineHeight:1.3 }}>"{query}"</h2>
+          <span style={{ display:"inline-block", padding:"4px 12px", borderRadius:"20px", background:vc.badge, color:"#fff", fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.08em", textTransform:"uppercase" }}>{vc.label}</span>
         </div>
       </div>
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px" }}>
@@ -1019,10 +1014,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               boxShadow:"inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 3px rgba(0,0,0,0.4), 0 2px 0 rgba(0,0,0,0.45)",
             }}
           >
-            {loading
-              ? <span style={{ width:"16px", height:"16px", border:"2px solid #475569", borderTopColor:"transparent", borderRadius:"50%", display:"inline-block", animation:"spin 0.7s linear infinite" }} />
-              : <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
-            }
+            <img src="/logo.png" alt="WHOzTHEY?" style={{ height:"30px", width:"auto", display:"block" }} />
           </button>
         </div>
       </div>
@@ -1255,7 +1247,7 @@ export default function WHOzTHEY() {
               <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
             )}
             {answer&&!loading&&!selectedSponsor&&(
-              <AnswerPanel query={query} answer={answer} onClear={handleClear} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} />
+              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} />
             )}
           </div>
           {isWelcome&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
