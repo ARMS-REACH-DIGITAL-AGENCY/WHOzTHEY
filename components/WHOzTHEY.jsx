@@ -162,7 +162,7 @@ const SPONSOR_ADS = [
     cta: "Get Protected →",
     ctaUrl: "https://armsreach-global360.manus.space/",
     accent: "#0284c7",
-    linkMode: "direct",
+    linkMode: "frame",
   },
   {
     id:"s2",
@@ -1120,6 +1120,23 @@ function SponsorResultPanel({ sponsor, onClear }) {
   );
 }
 
+function SponsorFramePanel({ sponsor, onClear }) {
+  if (!sponsor) return null;
+  return (
+    <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
+      <div style={{ background:"#0f172a", padding:"10px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px" }}>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color: sponsor.accent || "#dc2626", margin:0 }}>{sponsor.badge} · {sponsor.sponsor}</p>
+        <button onClick={onClear} style={{ background:"none", border:"1px solid #475569", borderRadius:"4px", color:"#cbd5e1", fontSize:"11px", fontFamily:"system-ui", padding:"3px 10px", cursor:"pointer", flexShrink:0 }}>Close ✕</button>
+      </div>
+      <iframe
+        title={`${sponsor.sponsor} sponsor page`}
+        src={sponsor.ctaUrl}
+        style={{ width:"100%", height:"calc(100vh - 230px)", minHeight:"560px", border:"none", display:"block", background:"#fff" }}
+      />
+    </section>
+  );
+}
+
 // ── MARKETPLACE TAB ───────────────────────────────────────────────────────────
 function Marketplace() {
   return (
@@ -1693,7 +1710,9 @@ export default function WHOzTHEY() {
               <TheySaidWhat clarification={clarification} onSelect={handleClarificationSelect} onSkip={()=>{ setClarification(null); runSearch(query); }} />
             )}
             {selectedSponsor&&!loading&&(
-              <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
+              selectedSponsor.linkMode === "frame" && selectedSponsor.ctaUrl
+                ? <SponsorFramePanel sponsor={selectedSponsor} onClear={handleClear} />
+                : <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
             )}
             {answer&&!loading&&!selectedSponsor&&(
               <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} headerHeight={headerHeight} sessionId={sessionId} showExplainer={isDefault} onStoreClick={handleStoreClick} />

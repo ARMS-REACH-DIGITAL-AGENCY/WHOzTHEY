@@ -12,7 +12,7 @@ const DEFAULT_SPONSOR_CARDS = [
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
     ctaLabel: 'Claim Your Voucher →',
     accentColor: '#0284c7',
-    linkMode: 'direct',
+    linkMode: 'frame',
   },
   {
     sponsorName: 'YatStats',
