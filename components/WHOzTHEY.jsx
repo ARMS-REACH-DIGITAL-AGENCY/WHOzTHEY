@@ -1275,9 +1275,9 @@ function ExplainerFlipbook({ query, onStoreClick }) {
               </p>
             )}
             <img
-              src={`/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
+              src={index === 0 ? "/explainer-slides/slide-01-logo.jpg" : `/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
               alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
-              style={{ width:"100%", display:"block" }}
+              style={{ width:"100%", display:"block", ...(index === 0 ? { transform:"scale(1.3)", transformOrigin:"center" } : {}) }}
             />
             <button
               onClick={prev}
