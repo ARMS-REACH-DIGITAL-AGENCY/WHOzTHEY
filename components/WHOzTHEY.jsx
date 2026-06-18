@@ -1268,16 +1268,16 @@ function ExplainerFlipbook({ query, onStoreClick }) {
           {/* speech-bubble tail */}
           <div style={{ position:"absolute", left:"34px", bottom:"-16px", width:0, height:0, borderRight:"22px solid transparent", borderTop:`20px solid ${BRAND_CREAM}` }} />
 
-          <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY }}>
+          <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY, aspectRatio:"1376/768", display:"flex", flexDirection:"column" }}>
             {index === 0 && query && (
-              <p style={{ fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"14px", color:BRAND_CREAM, lineHeight:1.5, textAlign:"center", margin:0, padding:"18px 22px 4px" }}>
+              <p style={{ flexShrink:0, fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"12px", color:BRAND_CREAM, lineHeight:1.4, textAlign:"center", margin:0, padding:"10px 20px 2px" }}>
                 <span style={{ color:BRAND_RED }}>They say,</span> {query}
               </p>
             )}
             <img
               src={index === 0 ? "/explainer-slides/slide-01-logo.jpg" : `/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
               alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
-              style={{ width:"100%", display:"block" }}
+              style={{ width:"100%", flex:1, minHeight:0, display:"block", objectFit:"contain" }}
             />
             <button
               onClick={prev}
