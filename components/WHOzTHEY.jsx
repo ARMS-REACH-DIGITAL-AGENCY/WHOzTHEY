@@ -799,15 +799,15 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"20px 24px", minHeight:"240px" }}>
         {activeTab==="origin" && (
           <>
+            {showExplainer && (
+              <div style={{ margin:"0 -24px 24px" }}>
+                <ExplainerFlipbook query={query} onStoreClick={onStoreClick} />
+              </div>
+            )}
             <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
             </div>
-            {showExplainer && (
-              <div style={{ margin:"0 -24px 24px" }}>
-                <ExplainerFlipbook onStoreClick={onStoreClick} />
-              </div>
-            )}
             <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
@@ -1242,7 +1242,7 @@ const BRAND_RED = "#dc2626";
 
 const EXPLAINER_STORE_SLIDE = 11; // the "Wear your curiosity" merch slide
 
-function ExplainerFlipbook({ onStoreClick }) {
+function ExplainerFlipbook({ query, onStoreClick }) {
   const [index, setIndex] = useState(0);
   const touchStartX = useRef(null);
 
@@ -1268,28 +1268,12 @@ function ExplainerFlipbook({ onStoreClick }) {
           {/* speech-bubble tail */}
           <div style={{ position:"absolute", left:"34px", bottom:"-16px", width:0, height:0, borderRight:"22px solid transparent", borderTop:`20px solid ${BRAND_CREAM}` }} />
 
-          {/* left/right quote marks */}
-          <span style={{ position:"absolute", top:"50%", left:"-15px", transform:"translateY(-50%)", fontFamily:"var(--font-anton)", fontSize:"50px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">“</span>
-          <span style={{ position:"absolute", top:"50%", right:"-15px", transform:"translateY(-50%)", fontFamily:"var(--font-anton)", fontSize:"50px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">”</span>
-
-          {/* magnifying-glass + fingerprint badge */}
-          <div style={{ position:"absolute", top:"-18px", right:"-14px", width:"50px", height:"50px" }} aria-hidden="true">
-            <div style={{ width:"40px", height:"40px", borderRadius:"50%", border:`5px solid ${BRAND_CREAM}`, background:BRAND_NAVY, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 3px 8px rgba(0,0,0,0.35)" }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_CREAM} strokeWidth="1.6" strokeLinecap="round">
-                <path d="M12 3c4 0 7 2.5 7 7" />
-                <path d="M12 5.3c3 0 5 2 5 4.7" />
-                <path d="M5 10c0-2.8 1.6-5 3.5-6.2" />
-                <path d="M4.2 13.5C4 12.3 4 11.4 4 10c0-1 .15-1.9.4-2.8" />
-                <path d="M7.5 18.5C6 16.7 5.3 14.8 5.3 12.5" />
-                <path d="M9.5 20.4C8 18.6 7.7 16.3 7.7 13.8c0-2.4 1.9-4.3 4.3-4.3s4.3 1.9 4.3 4.3" />
-                <path d="M12 21c-1-1-1.7-2.2-1.7-4" />
-                <path d="M16.3 13.8c0 2.3-.6 4-1.8 5.4" />
-              </svg>
-            </div>
-            <div style={{ position:"absolute", width:"7px", height:"20px", background:BRAND_CREAM, bottom:"-12px", right:"3px", transform:"rotate(45deg)", borderRadius:"3px" }} />
-          </div>
-
           <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY }}>
+            {index === 0 && query && (
+              <p style={{ fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"14px", color:BRAND_CREAM, lineHeight:1.5, textAlign:"center", margin:0, padding:"18px 22px 4px" }}>
+                <span style={{ color:BRAND_RED }}>They say,</span> {query}
+              </p>
+            )}
             <img
               src={`/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
               alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
