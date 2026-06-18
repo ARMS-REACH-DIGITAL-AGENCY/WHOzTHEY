@@ -1231,6 +1231,9 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 const EXPLAINER_SLIDE_COUNT = 13;
+const BRAND_CREAM = "#f9f3e9";
+const BRAND_NAVY = "#131720";
+const BRAND_RED = "#dc2626";
 
 function ExplainerFlipbook() {
   const [index, setIndex] = useState(0);
@@ -1242,47 +1245,80 @@ function ExplainerFlipbook() {
 
   return (
     <div>
-      <div
-        style={{ position:"relative", borderRadius:"14px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)", background:"#0f172a" }}
-        onTouchStart={(e)=>{ touchStartX.current = e.touches[0].clientX; }}
-        onTouchEnd={(e)=>{
-          if (touchStartX.current == null) return;
-          const delta = e.changedTouches[0].clientX - touchStartX.current;
-          if (delta < -40) next();
-          else if (delta > 40) prev();
-          touchStartX.current = null;
-        }}
-      >
-        <img
-          src={`/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
-          alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
-          style={{ width:"100%", display:"block" }}
-        />
-        <button
-          onClick={prev}
-          disabled={index === 0}
-          aria-label="Previous slide"
-          style={{ position:"absolute", top:"50%", left:"8px", transform:"translateY(-50%)", width:"32px", height:"32px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+      {/* "WHOzTHEY?" speech-bubble frame around the slide */}
+      <div style={{ position:"relative", maxWidth:"480px", margin:"0 auto", padding:"20px 22px 30px" }}>
+        <div
+          style={{ position:"relative", background:BRAND_CREAM, borderRadius:"28px", padding:"10px", boxShadow:"0 10px 28px rgba(0,0,0,0.4)" }}
+          onTouchStart={(e)=>{ touchStartX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e)=>{
+            if (touchStartX.current == null) return;
+            const delta = e.changedTouches[0].clientX - touchStartX.current;
+            if (delta < -40) next();
+            else if (delta > 40) prev();
+            touchStartX.current = null;
+          }}
         >
-          ‹
-        </button>
-        <button
-          onClick={next}
-          disabled={index === EXPLAINER_SLIDE_COUNT - 1}
-          aria-label="Next slide"
-          style={{ position:"absolute", top:"50%", right:"8px", transform:"translateY(-50%)", width:"32px", height:"32px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === EXPLAINER_SLIDE_COUNT - 1 ? "default" : "pointer", opacity: index === EXPLAINER_SLIDE_COUNT - 1 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
-        >
-          ›
-        </button>
+          {/* speech-bubble tail */}
+          <div style={{ position:"absolute", left:"34px", bottom:"-16px", width:0, height:0, borderRight:"22px solid transparent", borderTop:`20px solid ${BRAND_CREAM}` }} />
+
+          {/* left/right quote marks */}
+          <span style={{ position:"absolute", top:"50%", left:"-13px", transform:"translateY(-50%)", fontFamily:"Georgia,serif", fontWeight:900, fontSize:"46px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">“</span>
+          <span style={{ position:"absolute", top:"50%", right:"-13px", transform:"translateY(-50%)", fontFamily:"Georgia,serif", fontWeight:900, fontSize:"46px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">”</span>
+
+          {/* magnifying-glass + fingerprint badge */}
+          <div style={{ position:"absolute", top:"-18px", right:"-14px", width:"50px", height:"50px" }} aria-hidden="true">
+            <div style={{ width:"40px", height:"40px", borderRadius:"50%", border:`5px solid ${BRAND_CREAM}`, background:BRAND_NAVY, display:"flex", alignItems:"center", justifyContent:"center", boxShadow:"0 3px 8px rgba(0,0,0,0.35)" }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={BRAND_CREAM} strokeWidth="1.6" strokeLinecap="round">
+                <path d="M12 3c4 0 7 2.5 7 7" />
+                <path d="M12 5.3c3 0 5 2 5 4.7" />
+                <path d="M5 10c0-2.8 1.6-5 3.5-6.2" />
+                <path d="M4.2 13.5C4 12.3 4 11.4 4 10c0-1 .15-1.9.4-2.8" />
+                <path d="M7.5 18.5C6 16.7 5.3 14.8 5.3 12.5" />
+                <path d="M9.5 20.4C8 18.6 7.7 16.3 7.7 13.8c0-2.4 1.9-4.3 4.3-4.3s4.3 1.9 4.3 4.3" />
+                <path d="M12 21c-1-1-1.7-2.2-1.7-4" />
+                <path d="M16.3 13.8c0 2.3-.6 4-1.8 5.4" />
+              </svg>
+            </div>
+            <div style={{ position:"absolute", width:"7px", height:"20px", background:BRAND_CREAM, bottom:"-12px", right:"3px", transform:"rotate(45deg)", borderRadius:"3px" }} />
+          </div>
+
+          <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY }}>
+            <img
+              src={`/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
+              alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
+              style={{ width:"100%", display:"block" }}
+            />
+            <button
+              onClick={prev}
+              disabled={index === 0}
+              aria-label="Previous slide"
+              style={{ position:"absolute", top:"50%", left:"8px", transform:"translateY(-50%)", width:"30px", height:"30px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              ‹
+            </button>
+            <button
+              onClick={next}
+              disabled={index === EXPLAINER_SLIDE_COUNT - 1}
+              aria-label="Next slide"
+              style={{ position:"absolute", top:"50%", right:"8px", transform:"translateY(-50%)", width:"30px", height:"30px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === EXPLAINER_SLIDE_COUNT - 1 ? "default" : "pointer", opacity: index === EXPLAINER_SLIDE_COUNT - 1 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              ›
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", marginTop:"10px" }}>
+      <h2 style={{ fontFamily:"system-ui", fontWeight:"800", fontSize:"17px", textAlign:"center", color:BRAND_CREAM, margin:"0 0 16px", letterSpacing:"0.02em", textTransform:"uppercase" }}>
+        Tracing the origin of everything <span style={{ color:BRAND_RED }}>"They"</span> ever said
+      </h2>
+
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px" }}>
         {Array.from({ length: EXPLAINER_SLIDE_COUNT }).map((_, i) => (
           <button
             key={i}
             onClick={()=>goTo(i)}
             aria-label={`Go to slide ${i + 1}`}
-            style={{ width: i === index ? "18px" : "6px", height:"6px", borderRadius:"3px", border:"none", background: i === index ? "#dc2626" : "#cbd5e1", cursor:"pointer", padding:0, transition:"width 0.15s" }}
+            style={{ width: i === index ? "18px" : "6px", height:"6px", borderRadius:"3px", border:"none", background: i === index ? BRAND_RED : "rgba(249,243,233,0.35)", cursor:"pointer", padding:0, transition:"width 0.15s" }}
           />
         ))}
       </div>
@@ -1295,11 +1331,10 @@ function WelcomeState({ onSearch, onStoreClick }) {
     <div style={{ background:"#ffffff" }}>
 
       {/* Explainer flip-book */}
-      <div style={{ padding:"16px 16px 20px", maxWidth:"680px", margin:"0 auto" }}>
-        <h2 style={{ fontFamily:"system-ui", fontWeight:"800", fontSize:"19px", textAlign:"center", color:"#0f172a", margin:"0 0 12px", letterSpacing:"0.01em" }}>
-          Tracing the origin of everything <span style={{ color:"#dc2626" }}>"They"</span> ever said
-        </h2>
-        <ExplainerFlipbook />
+      <div style={{ background:BRAND_NAVY, padding:"22px 16px 8px" }}>
+        <div style={{ maxWidth:"680px", margin:"0 auto" }}>
+          <ExplainerFlipbook />
+        </div>
       </div>
 
       {/* Swag Store promo */}
