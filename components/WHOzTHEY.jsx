@@ -908,6 +908,12 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
 }
 
 // ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
+function renderSponsorTeaser(text) {
+  const match = text.match(/^(They)\b/i);
+  if (!match) return text;
+  return <><span style={{ color:"#dc2626" }}>{match[1]}</span>{text.slice(match[1].length)}</>;
+}
+
 function trackSponsor(type, item, sessionId, firebaseUid) {
   if (!UUID_RE.test(item?.id || "")) return;
   fetch("/api/sponsor-track", {
@@ -989,7 +995,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
         <div style={{ width:"100%", background:"#1e293b", border:"none", borderRadius:"0", padding:"10px 14px", display:"flex", alignItems:"center", gap:"12px", textAlign:"left", boxSizing:"border-box" }}>
           <button onClick={openItem} style={{ flex:1, minWidth:0, background:"transparent", border:"none", padding:0, cursor:"pointer", textAlign:"left" }}>
             <p style={{ fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#f8fafc", margin:"0", lineHeight:1.35, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
-              {item.isSponsor ? item.teaser : (<><span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}</>)}…
+              {item.isSponsor ? renderSponsorTeaser(item.teaser) : (<><span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}</>)}…
             </p>
           </button>
           <button
@@ -1034,7 +1040,7 @@ function SponsorResultPanel({ sponsor, onClear }) {
           <div>
             <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:sponsor.accent, margin:"0 0 4px" }}>{sponsor.badge} · {sponsor.sponsor}</p>
             <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"20px", fontWeight:"700", color:"#0f172a", margin:0, lineHeight:1.3 }}>
-              {sponsor.teaser}
+              {renderSponsorTeaser(sponsor.teaser)}
             </h2>
           </div>
           <button onClick={onClear} style={{ background:"none", border:"1px solid #cbd5e1", borderRadius:"4px", color:"#64748b", fontSize:"11px", fontFamily:"system-ui", padding:"3px 10px", cursor:"pointer", flexShrink:0 }}>Close ✕</button>
