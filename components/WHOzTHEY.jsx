@@ -1277,7 +1277,7 @@ function ExplainerFlipbook({ query, onStoreClick }) {
             <img
               src={index === 0 ? "/explainer-slides/slide-01-logo.jpg" : `/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
               alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
-              style={{ width:"100%", display:"block", ...(index === 0 ? { transform:"scale(1.3)", transformOrigin:"center" } : {}) }}
+              style={{ width:"100%", display:"block" }}
             />
             <button
               onClick={prev}
@@ -1309,7 +1309,7 @@ function ExplainerFlipbook({ query, onStoreClick }) {
       </div>
 
       <h2 style={{ fontFamily:"var(--font-anton)", fontWeight:"400", fontSize:"19px", textAlign:"center", color:BRAND_NAVY, margin:"0 0 16px", letterSpacing:"0.01em", textTransform:"uppercase" }}>
-        Tracing the origin of everything <span style={{ color:BRAND_RED }}>"They"</span> ever said
+        Tracing the origins of<br />everything <span style={{ color:BRAND_RED }}>"They"</span> ever said.
       </h2>
 
       <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px" }}>
