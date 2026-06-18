@@ -1185,7 +1185,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
             <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Quiz</span>
           </button>
           {/* Reset */}
-          <button onClick={()=>{ setClaim(""); onResetSearch?.(); }} title="Reset search" aria-label="Reset search" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
+          <button onClick={onResetSearch} title="Reset search" aria-label="Reset search" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
             <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Reset</span>
           </button>
@@ -1208,8 +1208,8 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
       {/* Row 2: custom search input + WHOzTHEY submit button (same card treatment as the footer carousel row) */}
       <div style={{ padding:"6px 14px 10px" }}>
         <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 10px", display:"flex", alignItems:"flex-start", gap:"8px", boxSizing:"border-box" }}>
-          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"0px" }}>
-            <span style={{ fontFamily:"system-ui", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", fontSize:"10px", whiteSpace:"nowrap" }}>"they" say,</span>
+          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"row", alignItems:"flex-start", gap:"4px" }}>
+            <span style={{ fontFamily:"'Georgia',serif", fontWeight:"700", color:"#dc2626", fontSize:"13px", lineHeight:1.35, whiteSpace:"nowrap", flexShrink:0 }}>They say,</span>
             <textarea
               rows={2}
               value={claim}
@@ -1217,7 +1217,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               onChange={e=>setClaim(e.target.value)}
               onKeyDown={e=>{ if (e.key==="Enter") { e.preventDefault(); submit(); } }}
               aria-label="Search a claim"
-              style={{ width:"100%", padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
+              style={{ flex:1, minWidth:0, padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
             />
           </div>
           <button
@@ -1566,11 +1566,11 @@ export default function WHOzTHEY() {
   useEffect(() => { window.__whoztheySearch = handleSearch; });
 
   const isWelcome = isDefault&&!loading&&!error&&!clarification&&!selectedSponsor;
-  const verdict = answer&&!loading ? (VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED) : null;
+  const verdict = answer&&!loading&&!isDefault ? (VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED) : null;
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} verdict={verdict} onHeightChange={setHeaderHeight} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={isDefault ? "" : query} verdict={verdict} onHeightChange={setHeaderHeight} />
 
 
 
