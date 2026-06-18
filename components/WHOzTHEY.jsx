@@ -66,7 +66,58 @@ const QUIZ_QUESTIONS = [
     { label:"Tell everyone at Christmas dinner", persona:"instigator" },
     { label:"Keep both possibilities open", persona:"peacemaker" },
   ]},
+  { q:"A group chat is spiraling over a wild claim. You:", options:[
+    { label:"Drop the WHOzTHEY? link and end the debate", persona:"oracle" },
+    { label:"Pile on with 'yeah that's definitely fake'", persona:"debunker" },
+    { label:"Say 'I mean, my grandma always said it too'", persona:"believer" },
+    { label:"Send three more spicy claims to keep it going", persona:"instigator" },
+    { label:"Try to get everyone to chill and move on", persona:"peacemaker" },
+  ]},
+  { q:"You just found out a claim you've repeated for years is false. You:", options:[
+    { label:"Already knew — you were just being polite", persona:"oracle" },
+    { label:"Feel personally betrayed by whoever started it", persona:"debunker" },
+    { label:"Keep saying it anyway, it's basically true in spirit", persona:"believer" },
+    { label:"Immediately tell someone else just to watch their reaction", persona:"instigator" },
+    { label:"Shrug — everyone's allowed their own version", persona:"peacemaker" },
+  ]},
+  { q:"Your friend says 'well, they say...' before making a claim. You:", options:[
+    { label:"Ask 'okay but who is they, exactly?'", persona:"oracle" },
+    { label:"Brace yourself to dismantle whatever comes next", persona:"debunker" },
+    { label:"Assume it's probably true, people don't just make things up", persona:"believer" },
+    { label:"Egg them on for more 'they say' claims", persona:"instigator" },
+    { label:"Let it slide, no need to make it a thing", persona:"peacemaker" },
+  ]},
+  { q:"A coworker repeats an office urban legend as fact. You:", options:[
+    { label:"Quietly fact-check it after the meeting", persona:"oracle" },
+    { label:"Correct them on the spot, sources included", persona:"debunker" },
+    { label:"Nod along — it's probably grounded in something real", persona:"believer" },
+    { label:"Ask leading questions to make it spicier", persona:"instigator" },
+    { label:"Let it pass so the meeting doesn't derail", persona:"peacemaker" },
+  ]},
+  { q:"When WHOzTHEY? gives a 'Genuinely Disputed' verdict, you feel:", options:[
+    { label:"Satisfied — that's the most honest answer there is", persona:"oracle" },
+    { label:"Annoyed — there has to be a real answer somewhere", persona:"debunker" },
+    { label:"Validated — see, it could still be true", persona:"believer" },
+    { label:"Thrilled — more fuel for the debate", persona:"instigator" },
+    { label:"Relieved — everyone gets to be a little bit right", persona:"peacemaker" },
+  ]},
+  { q:"Pick the badge you'd be proudest to earn:", options:[
+    { label:"🧠 Deep Diver — researched five different claims", persona:"oracle" },
+    { label:"🔥 CALL BS — called out a myth first", persona:"debunker" },
+    { label:"❤️ True Believer — stood your ground and believed it", persona:"believer" },
+    { label:"⚡ Full Debate — voted on every layer of the argument", persona:"instigator" },
+    { label:"🕊️ Settled It — used Settle the Argument to end a fight", persona:"peacemaker" },
+  ]},
 ];
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const ALL_BADGES = [
   { id:"first_search",  emoji:"🔍", label:"First Look",    desc:"Made your first WHOzTHEY? search" },
@@ -241,12 +292,12 @@ async function fetchSponsorCards() {
 }
 
 const VERDICT_MAP = {
-  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced" },
-  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", emoji:"⚖️", text:"Both Sides Valid" },
-  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", emoji:"🏡", text:"Traditional Wisdom" },
-  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", emoji:"🏛", text:"Institutionally Pushed" },
-  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", emoji:"🤷", text:"Genuinely Disputed" },
-  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
+  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced", desc:"We found exactly who said it first — name, era, and source." },
+  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", emoji:"⚖️", text:"Both Sides Valid", desc:"Real evidence supports more than one side. It's nuanced, not false." },
+  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", emoji:"🏡", text:"Traditional Wisdom", desc:"Passed down through families and folklore — useful, even if unproven." },
+  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", emoji:"🏛", text:"Institutionally Pushed", desc:"An organization or authority popularized it — sometimes for their own reasons." },
+  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", emoji:"🤷", text:"Genuinely Disputed", desc:"Experts themselves don't agree. The jury's still out." },
+  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth", desc:"It's been debunked. Fun to say, just not true." },
   // fallbacks for old verdicts
   TRUE:             { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced" },
   FALSE:            { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
@@ -333,23 +384,28 @@ function TheySaidWhat({ clarification, onSelect, onSkip }) {
 }
 
 // ── PERSONALITY QUIZ ──────────────────────────────────────────────────────────
+const QUIZ_ROUND_SIZE = 5;
+
 function PersonalityQuiz({ onComplete, onSkip }) {
+  const [questions] = useState(() =>
+    shuffleArray(QUIZ_QUESTIONS).slice(0, QUIZ_ROUND_SIZE).map(q => ({ ...q, options: shuffleArray(q.options) }))
+  );
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState({ oracle:0, debunker:0, believer:0, instigator:0, peacemaker:0 });
   function pick(persona) {
     const next = { ...scores, [persona]:scores[persona]+1 };
-    if (step < QUIZ_QUESTIONS.length-1) { setScores(next); setStep(step+1); }
+    if (step < questions.length-1) { setScores(next); setStep(step+1); }
     else { const winner = Object.entries(next).sort((a,b)=>b[1]-a[1])[0][0]; onComplete(winner); }
   }
-  const q = QUIZ_QUESTIONS[step];
+  const q = questions[step];
   return (
     <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0f172a 0%,#1e293b 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px" }}>
       <div style={{ marginBottom:"24px" }}><Wordmark size={36} /></div>
       <div style={{ background:"#1e293b", border:"1px solid #334155", borderRadius:"12px", padding:"28px 24px", maxWidth:"500px", width:"100%" }}>
         <div style={{ display:"flex", gap:"6px", marginBottom:"20px" }}>
-          {QUIZ_QUESTIONS.map((_,i)=><div key={i} style={{ flex:1, height:"3px", borderRadius:"2px", background:i<=step?"#dc2626":"#334155" }} />)}
+          {questions.map((_,i)=><div key={i} style={{ flex:1, height:"3px", borderRadius:"2px", background:i<=step?"#dc2626":"#334155" }} />)}
         </div>
-        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 10px" }}>Find Your WHOzTHEY? Personality · {step+1} of {QUIZ_QUESTIONS.length}</p>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 10px" }}>Find Your WHOzTHEY? Personality · {step+1} of {questions.length}</p>
         <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"18px", color:"#f8fafc", lineHeight:1.5, margin:"0 0 20px" }}>{q.q}</h2>
         <div style={{ display:"flex", flexDirection:"column", gap:"8px", marginBottom:"20px" }}>
           {q.options.map((opt,i)=>(
@@ -1255,16 +1311,60 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 
-const EXPLAINER_SLIDE_COUNT = 13;
+const IMAGE_SLIDE_COUNT = 13;
 const BRAND_CREAM = "#f9f3e9";
 const BRAND_NAVY = "#131720";
 const BRAND_RED = "#dc2626";
 
 const EXPLAINER_STORE_SLIDE = 11; // the "Wear your curiosity" merch slide
 
+// Code-rendered slides appended after the 13 designed image slides — these
+// explain app mechanics (verdicts, quiz, badges) so they can't go stale the
+// way a static graphic would whenever a verdict/persona/badge list changes.
+const EXPLAINER_INFO_SLIDES = [
+  {
+    title: "What Do The Verdicts Mean?",
+    intro: "Every WHOzTHEY? result lands on one of six verdicts:",
+    rows: Object.values(VERDICT_MAP).slice(0, 6).map(v => ({ emoji: v.emoji, label: v.text, desc: v.desc })),
+  },
+  {
+    title: "Find Your WHOzTHEY? Personality",
+    intro: "Tap the ✦ Quiz icon up top and we'll match your debate style to one of five personalities:",
+    rows: Object.values(PERSONAS).map(p => ({ emoji: p.emoji, label: p.title, desc: p.desc })),
+  },
+  {
+    title: "Badges — How You Earn Them",
+    intro: "Collect badges just by using WHOzTHEY? — they show up on your persona banner:",
+    rows: ALL_BADGES.map(b => ({ emoji: b.emoji, label: b.label, desc: b.desc })),
+  },
+];
+
+const EXPLAINER_SLIDE_COUNT = IMAGE_SLIDE_COUNT + EXPLAINER_INFO_SLIDES.length;
+
+function InfoSlide({ slide }) {
+  return (
+    <div style={{ flex:1, minHeight:0, overflowY:"auto", padding:"16px 18px" }}>
+      <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:BRAND_RED, margin:"0 0 6px" }}>{slide.title}</p>
+      <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#cbd5e1", lineHeight:1.5, margin:"0 0 12px" }}>{slide.intro}</p>
+      <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+        {slide.rows.map((r,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:"10px" }}>
+            <span style={{ fontSize:"20px", lineHeight:1.2, flexShrink:0 }}>{r.emoji}</span>
+            <div>
+              <p style={{ fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"13px", color:BRAND_CREAM, margin:"0 0 2px" }}>{r.label}</p>
+              <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", lineHeight:1.45, margin:0 }}>{r.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ExplainerFlipbook({ query, onStoreClick }) {
   const [index, setIndex] = useState(0);
   const touchStartX = useRef(null);
+  const isInfo = index >= IMAGE_SLIDE_COUNT;
 
   const goTo = (i) => setIndex(Math.max(0, Math.min(EXPLAINER_SLIDE_COUNT - 1, i)));
   const next = () => goTo(index + 1);
@@ -1288,17 +1388,21 @@ function ExplainerFlipbook({ query, onStoreClick }) {
           {/* speech-bubble tail */}
           <div style={{ position:"absolute", left:"34px", bottom:"-16px", width:0, height:0, borderRight:"22px solid transparent", borderTop:`20px solid ${BRAND_CREAM}` }} />
 
-          <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY, aspectRatio:"1376/768", display:"flex", flexDirection:"column" }}>
+          <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY, display:"flex", flexDirection:"column", ...(isInfo ? { minHeight:"260px", maxHeight:"360px" } : { aspectRatio:"1376/768" }) }}>
             {index === 0 && query && (
               <p style={{ flexShrink:0, fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"12px", color:BRAND_CREAM, lineHeight:1.4, textAlign:"center", margin:0, padding:"10px 20px 2px" }}>
                 <span style={{ color:BRAND_RED }}>They say,</span> {query}
               </p>
             )}
-            <img
-              src={index === 0 ? "/explainer-slides/slide-01-logo.jpg" : `/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
-              alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
-              style={{ width:"100%", flex:1, minHeight:0, display:"block", objectFit:"contain" }}
-            />
+            {isInfo ? (
+              <InfoSlide slide={EXPLAINER_INFO_SLIDES[index - IMAGE_SLIDE_COUNT]} />
+            ) : (
+              <img
+                src={index === 0 ? "/explainer-slides/slide-01-logo.jpg" : `/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
+                alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
+                style={{ width:"100%", flex:1, minHeight:0, display:"block", objectFit:"contain" }}
+              />
+            )}
             <button
               onClick={prev}
               disabled={index === 0}
