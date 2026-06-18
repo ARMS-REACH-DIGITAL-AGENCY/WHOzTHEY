@@ -776,18 +776,32 @@ function TabIcon({ name, color }) {
 
 function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, sessionId, headerHeight, showExplainer, onStoreClick }) {
   const [activeTab, setActiveTab] = useState("origin");
+  const sectionRef = useRef(null);
   if (!answer) return null;
   const verdictText = VERDICT_MAP[answer.verdict]?.text || answer.verdict || "Disputed";
 
+  function selectTab(key) {
+    setActiveTab(key);
+    // Snap back to the top of this tab's content instead of leaving the
+    // scroll position wherever the previous (possibly long) tab left it.
+    // (The tab bar itself is sticky, so scrolling IT into view is a no-op
+    // once it's already stuck — scroll the section's natural position instead.)
+    const el = sectionRef.current;
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - headerHeight;
+      window.scrollTo({ top, behavior:"smooth" });
+    }
+  }
+
   return (
-    <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
+    <section ref={sectionRef} style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
       <div style={{ position:"sticky", top:`${headerHeight}px`, zIndex:80, background:"#0f172a", borderBottom:"1px solid #1e293b", boxShadow:"0 2px 10px rgba(0,0,0,0.4)" }}>
         <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex" }}>
           {RESULT_TABS.map(tab=>{
             const active = activeTab===tab.key;
             const color = active ? "#fff" : "#64748b";
             return (
-              <button key={tab.key} onClick={()=>setActiveTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderBottom:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
+              <button key={tab.key} onClick={()=>selectTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderBottom:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
                 <TabIcon name={tab.icon} color={color} />
                 <span style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.06em", textTransform:"uppercase", color }}>{tab.label}</span>
               </button>
