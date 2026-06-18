@@ -1230,21 +1230,76 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 
+const EXPLAINER_SLIDE_COUNT = 13;
+
+function ExplainerFlipbook() {
+  const [index, setIndex] = useState(0);
+  const touchStartX = useRef(null);
+
+  const goTo = (i) => setIndex(Math.max(0, Math.min(EXPLAINER_SLIDE_COUNT - 1, i)));
+  const next = () => goTo(index + 1);
+  const prev = () => goTo(index - 1);
+
+  return (
+    <div>
+      <div
+        style={{ position:"relative", borderRadius:"14px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)", background:"#0f172a" }}
+        onTouchStart={(e)=>{ touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e)=>{
+          if (touchStartX.current == null) return;
+          const delta = e.changedTouches[0].clientX - touchStartX.current;
+          if (delta < -40) next();
+          else if (delta > 40) prev();
+          touchStartX.current = null;
+        }}
+      >
+        <img
+          src={`/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
+          alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
+          style={{ width:"100%", display:"block" }}
+        />
+        <button
+          onClick={prev}
+          disabled={index === 0}
+          aria-label="Previous slide"
+          style={{ position:"absolute", top:"50%", left:"8px", transform:"translateY(-50%)", width:"32px", height:"32px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+        >
+          ‹
+        </button>
+        <button
+          onClick={next}
+          disabled={index === EXPLAINER_SLIDE_COUNT - 1}
+          aria-label="Next slide"
+          style={{ position:"absolute", top:"50%", right:"8px", transform:"translateY(-50%)", width:"32px", height:"32px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === EXPLAINER_SLIDE_COUNT - 1 ? "default" : "pointer", opacity: index === EXPLAINER_SLIDE_COUNT - 1 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+        >
+          ›
+        </button>
+      </div>
+
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", marginTop:"10px" }}>
+        {Array.from({ length: EXPLAINER_SLIDE_COUNT }).map((_, i) => (
+          <button
+            key={i}
+            onClick={()=>goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            style={{ width: i === index ? "18px" : "6px", height:"6px", borderRadius:"3px", border:"none", background: i === index ? "#dc2626" : "#cbd5e1", cursor:"pointer", padding:0, transition:"width 0.15s" }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function WelcomeState({ onSearch, onStoreClick }) {
   return (
     <div style={{ background:"#ffffff" }}>
 
-      {/* Explainer: The Truth, Origin, and Curiosity Engine */}
+      {/* Explainer flip-book */}
       <div style={{ padding:"16px 16px 20px", maxWidth:"680px", margin:"0 auto" }}>
-        <div style={{ borderRadius:"14px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)" }}>
-          <img src="/explainer-engine.jpg" alt="The Truth, Origin, and Curiosity Engine — how WHOzTHEY? works in three steps" style={{ width:"100%", display:"block" }} />
-        </div>
-        {/* Video placeholder — swap for the explainer video embed when ready */}
-        <div style={{ marginTop:"8px", textAlign:"center" }}>
-          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", letterSpacing:"0.04em" }}>
-            🎬 Explainer video coming soon
-          </span>
-        </div>
+        <h2 style={{ fontFamily:"system-ui", fontWeight:"800", fontSize:"19px", textAlign:"center", color:"#0f172a", margin:"0 0 12px", letterSpacing:"0.01em" }}>
+          Tracing the origin of everything <span style={{ color:"#dc2626" }}>"They"</span> ever said
+        </h2>
+        <ExplainerFlipbook />
       </div>
 
       {/* Swag Store promo */}
