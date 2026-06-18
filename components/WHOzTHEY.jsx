@@ -799,15 +799,15 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"20px 24px", minHeight:"240px" }}>
         {activeTab==="origin" && (
           <>
-            {showExplainer && (
-              <div style={{ background:BRAND_NAVY, borderRadius:"16px", padding:"22px 8px 4px", margin:"-4px 0 24px" }}>
-                <ExplainerFlipbook onStoreClick={onStoreClick} />
-              </div>
-            )}
             <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
             </div>
+            {showExplainer && (
+              <div style={{ margin:"0 -24px 24px" }}>
+                <ExplainerFlipbook onStoreClick={onStoreClick} />
+              </div>
+            )}
             <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
@@ -1197,7 +1197,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               onChange={e=>setClaim(e.target.value)}
               onKeyDown={e=>{ if (e.key==="Enter") { e.preventDefault(); submit(); } }}
               aria-label="Search a claim"
-              style={{ width:"100%", padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"system-ui", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
+              style={{ width:"100%", padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
             />
           </div>
           <button
@@ -1253,7 +1253,7 @@ function ExplainerFlipbook({ onStoreClick }) {
   return (
     <div>
       {/* "WHOzTHEY?" speech-bubble frame around the slide */}
-      <div style={{ position:"relative", maxWidth:"480px", margin:"0 auto", padding:"20px 22px 30px" }}>
+      <div style={{ position:"relative", padding:"20px 30px 30px" }}>
         <div
           style={{ position:"relative", background:BRAND_CREAM, borderRadius:"28px", padding:"10px", boxShadow:"0 10px 28px rgba(0,0,0,0.4)" }}
           onTouchStart={(e)=>{ touchStartX.current = e.touches[0].clientX; }}
@@ -1269,8 +1269,8 @@ function ExplainerFlipbook({ onStoreClick }) {
           <div style={{ position:"absolute", left:"34px", bottom:"-16px", width:0, height:0, borderRight:"22px solid transparent", borderTop:`20px solid ${BRAND_CREAM}` }} />
 
           {/* left/right quote marks */}
-          <span style={{ position:"absolute", top:"50%", left:"-13px", transform:"translateY(-50%)", fontFamily:"Georgia,serif", fontWeight:900, fontSize:"46px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">“</span>
-          <span style={{ position:"absolute", top:"50%", right:"-13px", transform:"translateY(-50%)", fontFamily:"Georgia,serif", fontWeight:900, fontSize:"46px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">”</span>
+          <span style={{ position:"absolute", top:"50%", left:"-15px", transform:"translateY(-50%)", fontFamily:"var(--font-anton)", fontSize:"50px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">“</span>
+          <span style={{ position:"absolute", top:"50%", right:"-15px", transform:"translateY(-50%)", fontFamily:"var(--font-anton)", fontSize:"50px", color:BRAND_RED, lineHeight:1, textShadow:"0 2px 0 rgba(0,0,0,0.25)" }} aria-hidden="true">”</span>
 
           {/* magnifying-glass + fingerprint badge */}
           <div style={{ position:"absolute", top:"-18px", right:"-14px", width:"50px", height:"50px" }} aria-hidden="true">
@@ -1324,7 +1324,7 @@ function ExplainerFlipbook({ onStoreClick }) {
         </div>
       </div>
 
-      <h2 style={{ fontFamily:"system-ui", fontWeight:"800", fontSize:"17px", textAlign:"center", color:BRAND_CREAM, margin:"0 0 16px", letterSpacing:"0.02em", textTransform:"uppercase" }}>
+      <h2 style={{ fontFamily:"var(--font-anton)", fontWeight:"400", fontSize:"19px", textAlign:"center", color:BRAND_NAVY, margin:"0 0 16px", letterSpacing:"0.01em", textTransform:"uppercase" }}>
         Tracing the origin of everything <span style={{ color:BRAND_RED }}>"They"</span> ever said
       </h2>
 
@@ -1334,7 +1334,7 @@ function ExplainerFlipbook({ onStoreClick }) {
             key={i}
             onClick={()=>goTo(i)}
             aria-label={`Go to slide ${i + 1}`}
-            style={{ width: i === index ? "18px" : "6px", height:"6px", borderRadius:"3px", border:"none", background: i === index ? BRAND_RED : "rgba(249,243,233,0.35)", cursor:"pointer", padding:0, transition:"width 0.15s" }}
+            style={{ width: i === index ? "18px" : "6px", height:"6px", borderRadius:"3px", border:"none", background: i === index ? BRAND_RED : "rgba(19,23,32,0.2)", cursor:"pointer", padding:0, transition:"width 0.15s" }}
           />
         ))}
       </div>
