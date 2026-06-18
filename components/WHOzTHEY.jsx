@@ -760,7 +760,7 @@ function TabIcon({ name, color }) {
     case "origin":
       return <svg {...common}><path d="M12 21s-7-6.2-7-12a7 7 0 0114 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>;
     case "sides":
-      return <svg {...common}><path d="M12 3v3M12 18v3"/><path d="M4 6h16"/><path d="M4 6l-2 6a4 4 0 008 0L8 6"/><path d="M20 6l-2 6a4 4 0 008 0l-2-6"/></svg>;
+      return <svg {...common}><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>;
     case "spread":
       return <svg {...common}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
     case "vote":
