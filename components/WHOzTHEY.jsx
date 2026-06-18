@@ -800,7 +800,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
         {activeTab==="origin" && (
           <>
             {showExplainer && (
-              <div style={{ margin:"0 -24px 24px" }}>
+              <div style={{ margin:"-20px -24px 24px" }}>
                 <ExplainerFlipbook query={query} onStoreClick={onStoreClick} />
               </div>
             )}
@@ -1253,7 +1253,7 @@ function ExplainerFlipbook({ query, onStoreClick }) {
   return (
     <div>
       {/* "WHOzTHEY?" speech-bubble frame around the slide */}
-      <div style={{ position:"relative", padding:"20px 30px 30px" }}>
+      <div style={{ position:"relative", padding:"0 30px 30px" }}>
         <div
           style={{ position:"relative", background:BRAND_CREAM, borderRadius:"28px", padding:"10px", boxShadow:"0 10px 28px rgba(0,0,0,0.4)" }}
           onTouchStart={(e)=>{ touchStartX.current = e.touches[0].clientX; }}
