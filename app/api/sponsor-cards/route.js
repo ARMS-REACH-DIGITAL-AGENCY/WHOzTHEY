@@ -1,5 +1,7 @@
 import { neon } from '@neondatabase/serverless'
 
+export const dynamic = 'force-dynamic'
+
 let sqlClient = null
 
 const DEFAULT_SPONSOR_CARDS = [
