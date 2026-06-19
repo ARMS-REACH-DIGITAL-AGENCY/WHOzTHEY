@@ -1,18 +1,20 @@
 import { neon } from '@neondatabase/serverless'
 
+export const dynamic = 'force-dynamic'
+
 let sqlClient = null
 
 const DEFAULT_SPONSOR_CARDS = [
   {
-    sponsorName: 'Travel Protection Club',
+    sponsorName: 'Travel Protection Club by Benefit Buddies',
     contactName: 'Pete DeLuca',
-    websiteUrl: 'https://armsreach-global360.manus.space/',
-    ctaUrl: 'https://armsreach-global360.manus.space/',
+    websiteUrl: 'https://tpc-eight.vercel.app/',
+    ctaUrl: 'https://tpc-eight.vercel.app/',
     teaser: 'They are giving golfers $75 ShipSticks Vouchers!',
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
     ctaLabel: 'Claim Your Voucher →',
     accentColor: '#0284c7',
-    linkMode: 'direct',
+    linkMode: 'frame',
   },
   {
     sponsorName: 'YatStats',

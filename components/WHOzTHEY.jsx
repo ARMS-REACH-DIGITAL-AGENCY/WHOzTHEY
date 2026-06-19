@@ -66,7 +66,58 @@ const QUIZ_QUESTIONS = [
     { label:"Tell everyone at Christmas dinner", persona:"instigator" },
     { label:"Keep both possibilities open", persona:"peacemaker" },
   ]},
+  { q:"A group chat is spiraling over a wild claim. You:", options:[
+    { label:"Drop the WHOzTHEY? link and end the debate", persona:"oracle" },
+    { label:"Pile on with 'yeah that's definitely fake'", persona:"debunker" },
+    { label:"Say 'I mean, my grandma always said it too'", persona:"believer" },
+    { label:"Send three more spicy claims to keep it going", persona:"instigator" },
+    { label:"Try to get everyone to chill and move on", persona:"peacemaker" },
+  ]},
+  { q:"You just found out a claim you've repeated for years is false. You:", options:[
+    { label:"Already knew — you were just being polite", persona:"oracle" },
+    { label:"Feel personally betrayed by whoever started it", persona:"debunker" },
+    { label:"Keep saying it anyway, it's basically true in spirit", persona:"believer" },
+    { label:"Immediately tell someone else just to watch their reaction", persona:"instigator" },
+    { label:"Shrug — everyone's allowed their own version", persona:"peacemaker" },
+  ]},
+  { q:"Your friend says 'well, they say...' before making a claim. You:", options:[
+    { label:"Ask 'okay but who is they, exactly?'", persona:"oracle" },
+    { label:"Brace yourself to dismantle whatever comes next", persona:"debunker" },
+    { label:"Assume it's probably true, people don't just make things up", persona:"believer" },
+    { label:"Egg them on for more 'they say' claims", persona:"instigator" },
+    { label:"Let it slide, no need to make it a thing", persona:"peacemaker" },
+  ]},
+  { q:"A coworker repeats an office urban legend as fact. You:", options:[
+    { label:"Quietly fact-check it after the meeting", persona:"oracle" },
+    { label:"Correct them on the spot, sources included", persona:"debunker" },
+    { label:"Nod along — it's probably grounded in something real", persona:"believer" },
+    { label:"Ask leading questions to make it spicier", persona:"instigator" },
+    { label:"Let it pass so the meeting doesn't derail", persona:"peacemaker" },
+  ]},
+  { q:"When WHOzTHEY? gives a 'Genuinely Disputed' verdict, you feel:", options:[
+    { label:"Satisfied — that's the most honest answer there is", persona:"oracle" },
+    { label:"Annoyed — there has to be a real answer somewhere", persona:"debunker" },
+    { label:"Validated — see, it could still be true", persona:"believer" },
+    { label:"Thrilled — more fuel for the debate", persona:"instigator" },
+    { label:"Relieved — everyone gets to be a little bit right", persona:"peacemaker" },
+  ]},
+  { q:"Pick the badge you'd be proudest to earn:", options:[
+    { label:"🧠 Deep Diver — researched five different claims", persona:"oracle" },
+    { label:"🔥 CALL BS — called out a myth first", persona:"debunker" },
+    { label:"❤️ True Believer — stood your ground and believed it", persona:"believer" },
+    { label:"⚡ Full Debate — voted on every layer of the argument", persona:"instigator" },
+    { label:"🕊️ Settled It — used Settle the Argument to end a fight", persona:"peacemaker" },
+  ]},
 ];
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 const ALL_BADGES = [
   { id:"first_search",  emoji:"🔍", label:"First Look",    desc:"Made your first WHOzTHEY? search" },
@@ -111,7 +162,7 @@ const SPONSOR_ADS = [
     cta: "Get Protected →",
     ctaUrl: "https://armsreach-global360.manus.space/",
     accent: "#0284c7",
-    linkMode: "direct",
+    linkMode: "frame",
   },
   {
     id:"s2",
@@ -241,12 +292,12 @@ async function fetchSponsorCards() {
 }
 
 const VERDICT_MAP = {
-  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced" },
-  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", emoji:"⚖️", text:"Both Sides Valid" },
-  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", emoji:"🏡", text:"Traditional Wisdom" },
-  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", emoji:"🏛", text:"Institutionally Pushed" },
-  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", emoji:"🤷", text:"Genuinely Disputed" },
-  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
+  "ORIGIN TRACED":        { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced", desc:"We found exactly who said it first — name, era, and source." },
+  "BOTH SIDES VALID":     { bg:"#f0f9ff", border:"#7dd3fc", badge:"#0284c7", emoji:"⚖️", text:"Both Sides Valid", desc:"Real evidence supports more than one side. It's nuanced, not false." },
+  "TRADITIONAL WISDOM":   { bg:"#fffbeb", border:"#fde68a", badge:"#d97706", emoji:"🏡", text:"Traditional Wisdom", desc:"Passed down through families and folklore — useful, even if unproven." },
+  "INSTITUTIONALLY PUSHED":{ bg:"#faf5ff", border:"#d8b4fe", badge:"#7c3aed", emoji:"🏛", text:"Institutionally Pushed", desc:"An organization or authority popularized it — sometimes for their own reasons." },
+  "GENUINELY DISPUTED":   { bg:"#f8fafc", border:"#cbd5e1", badge:"#475569", emoji:"🤷", text:"Genuinely Disputed", desc:"Experts themselves don't agree. The jury's still out." },
+  "LIGHTHEARTED MYTH":    { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth", desc:"It's been debunked. Fun to say, just not true." },
   // fallbacks for old verdicts
   TRUE:             { bg:"#f0fdf4", border:"#86efac", badge:"#16a34a", emoji:"📍", text:"Origin Traced" },
   FALSE:            { bg:"#fef2f2", border:"#fca5a5", badge:"#dc2626", emoji:"🤥", text:"Lighthearted Myth" },
@@ -333,23 +384,28 @@ function TheySaidWhat({ clarification, onSelect, onSkip }) {
 }
 
 // ── PERSONALITY QUIZ ──────────────────────────────────────────────────────────
+const QUIZ_ROUND_SIZE = 5;
+
 function PersonalityQuiz({ onComplete, onSkip }) {
+  const [questions] = useState(() =>
+    shuffleArray(QUIZ_QUESTIONS).slice(0, QUIZ_ROUND_SIZE).map(q => ({ ...q, options: shuffleArray(q.options) }))
+  );
   const [step, setStep] = useState(0);
   const [scores, setScores] = useState({ oracle:0, debunker:0, believer:0, instigator:0, peacemaker:0 });
   function pick(persona) {
     const next = { ...scores, [persona]:scores[persona]+1 };
-    if (step < QUIZ_QUESTIONS.length-1) { setScores(next); setStep(step+1); }
+    if (step < questions.length-1) { setScores(next); setStep(step+1); }
     else { const winner = Object.entries(next).sort((a,b)=>b[1]-a[1])[0][0]; onComplete(winner); }
   }
-  const q = QUIZ_QUESTIONS[step];
+  const q = questions[step];
   return (
     <div style={{ minHeight:"100vh", background:"linear-gradient(160deg,#0f172a 0%,#1e293b 100%)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"32px 20px" }}>
       <div style={{ marginBottom:"24px" }}><Wordmark size={36} /></div>
       <div style={{ background:"#1e293b", border:"1px solid #334155", borderRadius:"12px", padding:"28px 24px", maxWidth:"500px", width:"100%" }}>
         <div style={{ display:"flex", gap:"6px", marginBottom:"20px" }}>
-          {QUIZ_QUESTIONS.map((_,i)=><div key={i} style={{ flex:1, height:"3px", borderRadius:"2px", background:i<=step?"#dc2626":"#334155" }} />)}
+          {questions.map((_,i)=><div key={i} style={{ flex:1, height:"3px", borderRadius:"2px", background:i<=step?"#dc2626":"#334155" }} />)}
         </div>
-        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 10px" }}>Find Your WHOzTHEY? Personality · {step+1} of {QUIZ_QUESTIONS.length}</p>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 10px" }}>Find Your WHOzTHEY? Personality · {step+1} of {questions.length}</p>
         <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"18px", color:"#f8fafc", lineHeight:1.5, margin:"0 0 20px" }}>{q.q}</h2>
         <div style={{ display:"flex", flexDirection:"column", gap:"8px", marginBottom:"20px" }}>
           {q.options.map((opt,i)=>(
@@ -760,7 +816,7 @@ function TabIcon({ name, color }) {
     case "origin":
       return <svg {...common}><path d="M12 21s-7-6.2-7-12a7 7 0 0114 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>;
     case "sides":
-      return <svg {...common}><path d="M12 3v3M12 18v3"/><path d="M4 6h16"/><path d="M4 6l-2 6a4 4 0 008 0L8 6"/><path d="M20 6l-2 6a4 4 0 008 0l-2-6"/></svg>;
+      return <svg {...common}><path d="M16 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M2 16l3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>;
     case "spread":
       return <svg {...common}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>;
     case "vote":
@@ -774,20 +830,34 @@ function TabIcon({ name, color }) {
   }
 }
 
-function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, sessionId, headerHeight }) {
+function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginRequest, sessionId, headerHeight, showExplainer, onStoreClick }) {
   const [activeTab, setActiveTab] = useState("origin");
+  const sectionRef = useRef(null);
   if (!answer) return null;
   const verdictText = VERDICT_MAP[answer.verdict]?.text || answer.verdict || "Disputed";
 
+  function selectTab(key) {
+    setActiveTab(key);
+    // Snap back to the top of this tab's content instead of leaving the
+    // scroll position wherever the previous (possibly long) tab left it.
+    // (The tab bar itself is sticky, so scrolling IT into view is a no-op
+    // once it's already stuck — scroll the section's natural position instead.)
+    const el = sectionRef.current;
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - headerHeight;
+      window.scrollTo({ top, behavior:"smooth" });
+    }
+  }
+
   return (
-    <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
+    <section ref={sectionRef} style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
       <div style={{ position:"sticky", top:`${headerHeight}px`, zIndex:80, background:"#0f172a", borderBottom:"1px solid #1e293b", boxShadow:"0 2px 10px rgba(0,0,0,0.4)" }}>
         <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex" }}>
           {RESULT_TABS.map(tab=>{
             const active = activeTab===tab.key;
             const color = active ? "#fff" : "#64748b";
             return (
-              <button key={tab.key} onClick={()=>setActiveTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderBottom:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
+              <button key={tab.key} onClick={()=>selectTab(tab.key)} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"3px", padding:"8px 2px 7px", background:"none", border:"none", borderBottom:`2px solid ${active?"#dc2626":"transparent"}`, cursor:"pointer" }}>
                 <TabIcon name={tab.icon} color={color} />
                 <span style={{ fontFamily:"system-ui", fontSize:"9px", fontWeight:"700", letterSpacing:"0.06em", textTransform:"uppercase", color }}>{tab.label}</span>
               </button>
@@ -799,6 +869,11 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
       <div style={{ maxWidth:"760px", margin:"0 auto", padding:"20px 24px", minHeight:"240px" }}>
         {activeTab==="origin" && (
           <>
+            {showExplainer && (
+              <div style={{ margin:"-20px -24px 24px" }}>
+                <ExplainerFlipbook query={query} onStoreClick={onStoreClick} />
+              </div>
+            )}
             <div style={{ marginBottom:"20px" }}>
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#dc2626", margin:"0 0 8px" }}>WHOzTHEY? — The Origin</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"15px", color:"#1e293b", lineHeight:"1.75", margin:0, fontWeight:"500" }}>{answer.whoIsThey}</p>
@@ -889,6 +964,12 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
 }
 
 // ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
+function renderSponsorTeaser(text) {
+  const match = text.match(/^(They)\b/i);
+  if (!match) return text;
+  return <><span style={{ color:"#dc2626" }}>{match[1]}</span>{text.slice(match[1].length)}</>;
+}
+
 function trackSponsor(type, item, sessionId, firebaseUid) {
   if (!UUID_RE.test(item?.id || "")) return;
   fetch("/api/sponsor-track", {
@@ -970,7 +1051,7 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
         <div style={{ width:"100%", background:"#1e293b", border:"none", borderRadius:"0", padding:"10px 14px", display:"flex", alignItems:"center", gap:"12px", textAlign:"left", boxSizing:"border-box" }}>
           <button onClick={openItem} style={{ flex:1, minWidth:0, background:"transparent", border:"none", padding:0, cursor:"pointer", textAlign:"left" }}>
             <p style={{ fontFamily:"'Georgia',serif", fontSize:"14px", fontWeight:"700", color:"#f8fafc", margin:"0", lineHeight:1.35, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
-              {item.isSponsor ? item.teaser : (<><span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}</>)}…
+              {item.isSponsor ? renderSponsorTeaser(item.teaser) : (<><span style={{ color:"#dc2626" }}>They say</span> {item.teaser.toLowerCase()}</>)}…
             </p>
           </button>
           <button
@@ -1015,7 +1096,7 @@ function SponsorResultPanel({ sponsor, onClear }) {
           <div>
             <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:sponsor.accent, margin:"0 0 4px" }}>{sponsor.badge} · {sponsor.sponsor}</p>
             <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"20px", fontWeight:"700", color:"#0f172a", margin:0, lineHeight:1.3 }}>
-              {sponsor.teaser}
+              {renderSponsorTeaser(sponsor.teaser)}
             </h2>
           </div>
           <button onClick={onClear} style={{ background:"none", border:"1px solid #cbd5e1", borderRadius:"4px", color:"#64748b", fontSize:"11px", fontFamily:"system-ui", padding:"3px 10px", cursor:"pointer", flexShrink:0 }}>Close ✕</button>
@@ -1035,6 +1116,23 @@ function SponsorResultPanel({ sponsor, onClear }) {
           </p>
         </div>
       </div>
+    </section>
+  );
+}
+
+function SponsorFramePanel({ sponsor, onClear }) {
+  if (!sponsor) return null;
+  return (
+    <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
+      <div style={{ background:"#0f172a", padding:"10px 16px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:"12px" }}>
+        <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color: sponsor.accent || "#dc2626", margin:0 }}>{sponsor.badge} · {sponsor.sponsor}</p>
+        <button onClick={onClear} style={{ background:"none", border:"1px solid #475569", borderRadius:"4px", color:"#cbd5e1", fontSize:"11px", fontFamily:"system-ui", padding:"3px 10px", cursor:"pointer", flexShrink:0 }}>Close ✕</button>
+      </div>
+      <iframe
+        title={`${sponsor.sponsor} sponsor page`}
+        src={sponsor.ctaUrl}
+        style={{ width:"100%", height:"calc(100vh - 230px)", minHeight:"560px", border:"none", display:"block", background:"#fff" }}
+      />
     </section>
   );
 }
@@ -1160,7 +1258,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
             <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Quiz</span>
           </button>
           {/* Reset */}
-          <button onClick={()=>{ setClaim(""); onResetSearch?.(); }} title="Reset search" aria-label="Reset search" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
+          <button onClick={onResetSearch} title="Reset search" aria-label="Reset search" style={{ background:"none", border:"none", cursor:"pointer", color:"#94a3b8", padding:0, display:"flex", flexDirection:"column", alignItems:"center", gap:"1px" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
             <span style={{ fontFamily:"system-ui", fontSize:"7px", color:"#64748b", letterSpacing:"0.04em" }}>Reset</span>
           </button>
@@ -1183,8 +1281,8 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
       {/* Row 2: custom search input + WHOzTHEY submit button (same card treatment as the footer carousel row) */}
       <div style={{ padding:"6px 14px 10px" }}>
         <div style={{ width:"100%", background:"#1e293b", borderRadius:"8px", padding:"8px 10px", display:"flex", alignItems:"flex-start", gap:"8px", boxSizing:"border-box" }}>
-          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", alignItems:"flex-start", gap:"0px" }}>
-            <span style={{ fontFamily:"system-ui", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:"#dc2626", fontSize:"10px", whiteSpace:"nowrap" }}>"they" say,</span>
+          <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"row", alignItems:"flex-start", gap:"4px" }}>
+            <span style={{ fontFamily:"'Georgia',serif", fontWeight:"700", color:"#dc2626", fontSize:"13px", lineHeight:1.35, whiteSpace:"nowrap", flexShrink:0 }}>They say,</span>
             <textarea
               rows={2}
               value={claim}
@@ -1192,7 +1290,7 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
               onChange={e=>setClaim(e.target.value)}
               onKeyDown={e=>{ if (e.key==="Enter") { e.preventDefault(); submit(); } }}
               aria-label="Search a claim"
-              style={{ width:"100%", padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"system-ui", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
+              style={{ flex:1, minWidth:0, padding:0, margin:0, background:"transparent", border:"none", outline:"none", resize:"none", fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"13px", lineHeight:1.35, color:"#f8fafc", caretColor:"#f8fafc" }}
             />
           </div>
           <button
@@ -1230,52 +1328,144 @@ function Hero({ onSearch, loading, persona, user, onLoginRequest, onQuizRequest,
 
 
 
-function WelcomeState({ onSearch, onStoreClick }) {
+const IMAGE_SLIDE_COUNT = 13;
+const BRAND_CREAM = "#f9f3e9";
+const BRAND_NAVY = "#131720";
+const BRAND_RED = "#dc2626";
+
+const EXPLAINER_STORE_SLIDE = 11; // the "Wear your curiosity" merch slide
+
+// Code-rendered slides appended after the 13 designed image slides — these
+// explain app mechanics (verdicts, quiz, badges) so they can't go stale the
+// way a static graphic would whenever a verdict/persona/badge list changes.
+const EXPLAINER_INFO_SLIDES = [
+  {
+    title: "What Do The Verdicts Mean?",
+    intro: "Every WHOzTHEY? result lands on one of six verdicts:",
+    rows: Object.values(VERDICT_MAP).slice(0, 6).map(v => ({ emoji: v.emoji, label: v.text, desc: v.desc })),
+  },
+  {
+    title: "Find Your WHOzTHEY? Personality",
+    intro: "Tap the ✦ Quiz icon up top and we'll match your debate style to one of five personalities:",
+    rows: Object.values(PERSONAS).map(p => ({ emoji: p.emoji, label: p.title, desc: p.desc })),
+  },
+  {
+    title: "Badges — How You Earn Them",
+    intro: "Collect badges just by using WHOzTHEY? — they show up on your persona banner:",
+    rows: ALL_BADGES.map(b => ({ emoji: b.emoji, label: b.label, desc: b.desc })),
+  },
+];
+
+const EXPLAINER_SLIDE_COUNT = IMAGE_SLIDE_COUNT + EXPLAINER_INFO_SLIDES.length;
+
+function InfoSlide({ slide }) {
   return (
-    <div style={{ background:"#ffffff" }}>
-
-      {/* Explainer: The Truth, Origin, and Curiosity Engine */}
-      <div style={{ padding:"16px 16px 20px", maxWidth:"680px", margin:"0 auto" }}>
-        <div style={{ borderRadius:"14px", overflow:"hidden", boxShadow:"0 4px 16px rgba(15,23,42,0.18)" }}>
-          <img src="/explainer-engine.jpg" alt="The Truth, Origin, and Curiosity Engine — how WHOzTHEY? works in three steps" style={{ width:"100%", display:"block" }} />
-        </div>
-        {/* Video placeholder — swap for the explainer video embed when ready */}
-        <div style={{ marginTop:"8px", textAlign:"center" }}>
-          <span style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", letterSpacing:"0.04em" }}>
-            🎬 Explainer video coming soon
-          </span>
-        </div>
-      </div>
-
-      {/* Swag Store promo */}
-      <div style={{ background:"#ffffff", borderTop:"1px solid #e2e8f0", padding:"20px 16px 24px" }}>
-        <div style={{ maxWidth:"680px", margin:"0 auto" }}>
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px", marginBottom:"16px" }}>
-            <p style={{ fontFamily:"system-ui", fontSize:"13px", fontWeight:"600", color:"#0f172a", margin:0, lineHeight:1.4, flex:1, minWidth:0 }}>
-              <span style={{ color:"#dc2626", fontWeight:"700" }}>"They" say</span> WHOzTHEY? swag makes a great gift for the 'know-it-all' in your life.
-            </p>
-            <button onClick={onStoreClick} style={{ flexShrink:0, padding:"10px 14px", background:"#dc2626", border:"none", borderRadius:"8px", color:"#fff", fontFamily:"system-ui", fontSize:"11px", fontWeight:"700", letterSpacing:"0.03em", cursor:"pointer", boxShadow:"0 2px 0 rgba(0,0,0,0.15)", whiteSpace:"nowrap" }}>
-              Shop our swag shop
-            </button>
+    <div style={{ flex:1, minHeight:0, overflowY:"auto", padding:"16px 18px" }}>
+      <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:BRAND_RED, margin:"0 0 6px" }}>{slide.title}</p>
+      <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#cbd5e1", lineHeight:1.5, margin:"0 0 12px" }}>{slide.intro}</p>
+      <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+        {slide.rows.map((r,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:"10px" }}>
+            <span style={{ fontSize:"20px", lineHeight:1.2, flexShrink:0 }}>{r.emoji}</span>
+            <div>
+              <p style={{ fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"13px", color:BRAND_CREAM, margin:"0 0 2px" }}>{r.label}</p>
+              <p style={{ fontFamily:"system-ui", fontSize:"11px", color:"#94a3b8", lineHeight:1.45, margin:0 }}>{r.desc}</p>
+            </div>
           </div>
-
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3, 1fr)", gap:"8px" }}>
-            {[
-              { src:"/swag-hat-navy.jpg", alt:"WHOzTHEY? navy trucker hat" },
-              { src:"/swag-hoodie-pink.jpg", alt:'"Hello I\'m THEY" pink hoodie' },
-              { src:"/swag-hat-red-bs.jpg", alt:'"I Call Bullshit" red trucker hat' },
-            ].map(item => (
-              <button key={item.src} onClick={onStoreClick} style={{ background:"#fff", border:"1px solid #e2e8f0", borderRadius:"10px", padding:"6px", cursor:"pointer", overflow:"hidden" }}>
-                <img src={item.src} alt={item.alt} style={{ width:"100%", aspectRatio:"1/1", objectFit:"cover", display:"block", borderRadius:"6px" }} />
-              </button>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
+function ExplainerFlipbook({ query, onStoreClick }) {
+  const [index, setIndex] = useState(0);
+  const touchStartX = useRef(null);
+  const isInfo = index >= IMAGE_SLIDE_COUNT;
+
+  const goTo = (i) => setIndex(Math.max(0, Math.min(EXPLAINER_SLIDE_COUNT - 1, i)));
+  const next = () => goTo(index + 1);
+  const prev = () => goTo(index - 1);
+
+  return (
+    <div>
+      {/* "WHOzTHEY?" speech-bubble frame around the slide */}
+      <div style={{ position:"relative", padding:"0 30px 30px" }}>
+        <div
+          style={{ position:"relative", background:BRAND_CREAM, borderRadius:"28px", padding:"10px", boxShadow:"0 10px 28px rgba(0,0,0,0.4)" }}
+          onTouchStart={(e)=>{ touchStartX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e)=>{
+            if (touchStartX.current == null) return;
+            const delta = e.changedTouches[0].clientX - touchStartX.current;
+            if (delta < -40) next();
+            else if (delta > 40) prev();
+            touchStartX.current = null;
+          }}
+        >
+          {/* speech-bubble tail */}
+          <div style={{ position:"absolute", left:"34px", bottom:"-16px", width:0, height:0, borderRight:"22px solid transparent", borderTop:`20px solid ${BRAND_CREAM}` }} />
+
+          <div style={{ position:"relative", borderRadius:"20px", overflow:"hidden", background:BRAND_NAVY, display:"flex", flexDirection:"column", ...(isInfo ? { minHeight:"260px", maxHeight:"360px" } : { aspectRatio:"1376/768" }) }}>
+            {index === 0 && query && (
+              <p style={{ flexShrink:0, fontFamily:"'Georgia',serif", fontWeight:"700", fontSize:"12px", color:BRAND_CREAM, lineHeight:1.4, textAlign:"center", margin:0, padding:"10px 20px 2px" }}>
+                <span style={{ color:BRAND_RED }}>They say,</span> {query}
+              </p>
+            )}
+            {isInfo ? (
+              <InfoSlide slide={EXPLAINER_INFO_SLIDES[index - IMAGE_SLIDE_COUNT]} />
+            ) : (
+              <img
+                src={index === 0 ? "/explainer-slides/slide-01-logo.jpg" : `/explainer-slides/slide-${String(index + 1).padStart(2, "0")}.jpg`}
+                alt={`WHOzTHEY? explainer slide ${index + 1} of ${EXPLAINER_SLIDE_COUNT}`}
+                style={{ width:"100%", flex:1, minHeight:0, display:"block", objectFit:"contain" }}
+              />
+            )}
+            <button
+              onClick={prev}
+              disabled={index === 0}
+              aria-label="Previous slide"
+              style={{ position:"absolute", top:"50%", left:"8px", transform:"translateY(-50%)", width:"30px", height:"30px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === 0 ? "default" : "pointer", opacity: index === 0 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              ‹
+            </button>
+            <button
+              onClick={next}
+              disabled={index === EXPLAINER_SLIDE_COUNT - 1}
+              aria-label="Next slide"
+              style={{ position:"absolute", top:"50%", right:"8px", transform:"translateY(-50%)", width:"30px", height:"30px", borderRadius:"50%", border:"none", background:"rgba(15,23,42,0.55)", color:"#fff", fontSize:"16px", cursor: index === EXPLAINER_SLIDE_COUNT - 1 ? "default" : "pointer", opacity: index === EXPLAINER_SLIDE_COUNT - 1 ? 0.3 : 1, display:"flex", alignItems:"center", justifyContent:"center" }}
+            >
+              ›
+            </button>
+            {index === EXPLAINER_STORE_SLIDE - 1 && onStoreClick && (
+              <button
+                onClick={onStoreClick}
+                aria-label="Shop the WHOzTHEY? swag store"
+                style={{ position:"absolute", bottom:"10px", left:"50%", transform:"translateX(-50%)", padding:"9px 18px", background:BRAND_RED, border:"none", borderRadius:"20px", color:"#fff", fontFamily:"system-ui", fontSize:"12px", fontWeight:"700", letterSpacing:"0.03em", cursor:"pointer", boxShadow:"0 4px 14px rgba(220,38,38,0.55)", whiteSpace:"nowrap" }}
+              >
+                Shop our swag shop →
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <h2 style={{ fontFamily:"var(--font-anton)", fontWeight:"400", fontSize:"19px", textAlign:"center", color:BRAND_NAVY, margin:"0 0 16px", letterSpacing:"0.01em", textTransform:"uppercase" }}>
+        Tracing the origins of<br />everything <span style={{ color:BRAND_RED }}>"They"</span> ever said.
+      </h2>
+
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px" }}>
+        {Array.from({ length: EXPLAINER_SLIDE_COUNT }).map((_, i) => (
+          <button
+            key={i}
+            onClick={()=>goTo(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            style={{ width: i === index ? "18px" : "6px", height:"6px", borderRadius:"3px", border:"none", background: i === index ? BRAND_RED : "rgba(19,23,32,0.2)", cursor:"pointer", padding:0, transition:"width 0.15s" }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function LoadingAnswer({ query, stage }) {
   const [dot, setDot] = useState(".");
@@ -1308,6 +1498,20 @@ function StickySearchBar({ onSearch, persona }) {
   );
 }
 
+// ── DEFAULT "ORIGIN" CLAIM — WHOzTHEY? explaining itself, shown on first load ──
+const DEFAULT_QUERY = 'there\'s a new website that you can ask who "they" are whenever you hear someone say, "They say..." and it will research the claim for you';
+const DEFAULT_ANSWER = {
+  verdict: "ORIGIN TRACED",
+  whoIsThey: 'In this case, \'They\' is WHOzTHEY? — a website built on the idea that \'They say...\' claims deserve a real investigation. The creators are the curious minds behind this very page you\'re reading right now. For once, \'They\' showed up and identified themselves.',
+  origin: 'WHOzTHEY? was born from a simple frustration: people repeat claims constantly without knowing where they came from, and nobody ever stops to ask who \'they\' actually are. The site launched with the mission of tracing folk sayings, old wives\' tales, and handed-down wisdom back to their real origins — names, eras, and cultures included. It may be the first site dedicated entirely to unmasking the mysterious \'they\' behind everyday claims.',
+  traditionalView: 'Before WHOzTHEY?, when someone said "They say..." the conversation usually ended in a shrug, a Google rabbit hole, or a family argument with no real resolution.',
+  modernView: 'Now you can type the claim straight into WHOzTHEY? and get a traced origin, the cultural context, and a verdict — no more vague "they".',
+  commonGround: 'Either way, everyone agrees: somebody should finally be held accountable for everything "they" supposedly said.',
+  culturalSpread: 'WHOzTHEY? spread the way most claims do — word of mouth, a few dinner-table debates settled on the spot, and people sharing their results with whoever they were arguing with.',
+  funFact: 'WHOzTHEY? may be the first site dedicated entirely to unmasking the mysterious "they" behind everyday claims.',
+  sources: ["WHOzTHEY? — About the Project", "Built by ARMS Reach Digital Agency"],
+};
+
 // ── ROOT ──────────────────────────────────────────────────────────────────────
 export default function WHOzTHEY() {
   const [screen, setScreen]           = useState("main");
@@ -1319,8 +1523,9 @@ export default function WHOzTHEY() {
   const [toastBadge, setToastBadge]   = useState(null);
   const [user, setUser]               = useState(null);
   const [showLogin, setShowLogin]     = useState(false);
-  const [query, setQuery]             = useState("");
-  const [answer, setAnswer]           = useState(null);
+  const [query, setQuery]             = useState(DEFAULT_QUERY);
+  const [answer, setAnswer]           = useState(DEFAULT_ANSWER);
+  const [isDefault, setIsDefault]     = useState(true);
   const [clarification, setClarification] = useState(null);
   const [loading, setLoading]         = useState(false);
   const [loadingStage, setLoadingStage] = useState("clarify");
@@ -1385,12 +1590,12 @@ export default function WHOzTHEY() {
 
   useEffect(() => {
     if (activeTab !== "search") return;
-    if (!(loading || clarification || answer || error || selectedSponsor)) return;
+    if (!(loading || clarification || (answer && !isDefault) || error || selectedSponsor)) return;
     const t = setTimeout(() => {
       answerRef.current?.scrollIntoView({ behavior:"smooth", block:"start" });
     }, 80);
     return () => clearTimeout(t);
-  }, [activeTab, loading, clarification, answer, error, selectedSponsor]);
+  }, [activeTab, loading, clarification, answer, error, selectedSponsor, isDefault]);
 
   function earnBadge(id) {
     if (badges.includes(id)) return;
@@ -1408,6 +1613,7 @@ export default function WHOzTHEY() {
   async function handleSearch(rawClaim) {
     setSelectedSponsor(null);
     setActiveTab("search");
+    setIsDefault(false);
     setAnswer(null); setClarification(null); setError(null);
     setQuery(rawClaim); setLoading(true); setLoadingStage("clarify");
     try {
@@ -1448,7 +1654,8 @@ export default function WHOzTHEY() {
   }
 
   function handleClear() {
-    setQuery(""); setAnswer(null); setError(null); setClarification(null); setSelectedSponsor(null);
+    setQuery(DEFAULT_QUERY); setAnswer(DEFAULT_ANSWER); setError(null); setClarification(null); setSelectedSponsor(null);
+    setIsDefault(true);
     const url = new URL(window.location.href);
     url.searchParams.delete("q");
     window.history.replaceState(null, "", url.toString());
@@ -1479,12 +1686,12 @@ export default function WHOzTHEY() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { window.__whoztheySearch = handleSearch; });
 
-  const isWelcome = !loading&&!answer&&!error&&!clarification&&!selectedSponsor;
-  const verdict = answer&&!loading ? (VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED) : null;
+  const isWelcome = isDefault&&!loading&&!error&&!clarification&&!selectedSponsor;
+  const verdict = answer&&!loading&&!isDefault ? (VERDICT_MAP[answer.verdict] || VERDICT_MAP.DISPUTED) : null;
 
   return (
     <div style={{ minHeight:"100vh", background:"#f8fafc" }}>
-      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={query} verdict={verdict} onHeightChange={setHeaderHeight} />
+      <Hero onSearch={handleSearch} loading={loading} persona={persona} user={user} onLoginRequest={()=>setShowLogin(true)} onQuizRequest={()=>setShowQuiz(true)} onStoreClick={handleStoreClick} onResetSearch={handleResetFromHeader} attract={isWelcome} query={isDefault ? "" : query} verdict={verdict} onHeightChange={setHeaderHeight} />
 
 
 
@@ -1503,13 +1710,14 @@ export default function WHOzTHEY() {
               <TheySaidWhat clarification={clarification} onSelect={handleClarificationSelect} onSkip={()=>{ setClarification(null); runSearch(query); }} />
             )}
             {selectedSponsor&&!loading&&(
-              <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
+              selectedSponsor.linkMode === "frame" && selectedSponsor.ctaUrl
+                ? <SponsorFramePanel sponsor={selectedSponsor} onClear={handleClear} />
+                : <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
             )}
             {answer&&!loading&&!selectedSponsor&&(
-              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} headerHeight={headerHeight} sessionId={sessionId} />
+              <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} headerHeight={headerHeight} sessionId={sessionId} showExplainer={isDefault} onStoreClick={handleStoreClick} />
             )}
           </div>
-          {isWelcome&&<WelcomeState onSearch={handleSearch} onStoreClick={handleStoreClick} />}
 
         </>
       )}

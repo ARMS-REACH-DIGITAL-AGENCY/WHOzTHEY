@@ -1,6 +1,7 @@
-import { Inter } from 'next/font/google'
+import { Inter, Anton } from 'next/font/google'
 
 const inter = Inter({ subsets: ['latin'] })
+const anton = Anton({ subsets: ['latin'], weight: '400', variable: '--font-anton' })
 
 export const metadata = {
   title: 'WHOzTHEY? — Tracing the Origin of Everything "They" Ever Said',
@@ -23,7 +24,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={inter.className} style={{ margin: 0, padding: 0 }}>
+      <body className={`${inter.className} ${anton.variable}`} style={{ margin: 0, padding: 0 }}>
         {children}
       </body>
     </html>
