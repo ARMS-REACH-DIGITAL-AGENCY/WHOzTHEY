@@ -33,18 +33,9 @@ export async function GET() {
       order by table_name
     `;
 
-    const columnRows = await sql`
-      select table_name, column_name, data_type, is_nullable, column_default
-      from information_schema.columns
-      where table_schema = 'public'
-        and table_name in ('stripe_events', 'sponsors', 'sponsor_cards', 'sponsor_clicks', 'sponsor_impressions')
-      order by table_name, ordinal_position
-    `;
-
     return Response.json({
       ok: true,
       tables: rows.map((row) => row.table_name),
-      columns: columnRows,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
