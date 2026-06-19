@@ -1499,11 +1499,11 @@ function StickySearchBar({ onSearch, persona }) {
 }
 
 // ── DEFAULT "ORIGIN" CLAIM — WHOzTHEY? explaining itself, shown on first load ──
-const DEFAULT_QUERY = 'there\'s a new website that you can ask who "they" are whenever you hear someone say, "They say..." and it will research the claim for you';
+const DEFAULT_QUERY = 'WHOzTHEY? is a tool that traces the origins of folk wisdom and exposes the real sources behind anonymous collective claims';
 const DEFAULT_ANSWER = {
   verdict: "ORIGIN TRACED",
   whoIsThey: 'In this case, \'They\' is WHOzTHEY? — a website built on the idea that \'They say...\' claims deserve a real investigation. The creators are the curious minds behind this very page you\'re reading right now. For once, \'They\' showed up and identified themselves.',
-  origin: 'WHOzTHEY? was born from a simple frustration: people repeat claims constantly without knowing where they came from, and nobody ever stops to ask who \'they\' actually are. The site launched with the mission of tracing folk sayings, old wives\' tales, and handed-down wisdom back to their real origins — names, eras, and cultures included. It may be the first site dedicated entirely to unmasking the mysterious \'they\' behind everyday claims.',
+  origin: 'WHOzTHEY? was born from a simple frustration: people repeat claims constantly without knowing where they came from, and nobody ever stops to ask who \'they\' actually are. The site launched with the mission of tracing folk wisdom, old wives\' tales, and handed-down sayings back to their real sources — names, eras, and cultures included. It may be the first site dedicated entirely to unmasking the mysterious \'they\' behind anonymous collective claims.',
   traditionalView: 'Before WHOzTHEY?, when someone said "They say..." the conversation usually ended in a shrug, a Google rabbit hole, or a family argument with no real resolution.',
   modernView: 'Now you can type the claim straight into WHOzTHEY? and get a traced origin, the cultural context, and a verdict — no more vague "they".',
   commonGround: 'Either way, everyone agrees: somebody should finally be held accountable for everything "they" supposedly said.',
