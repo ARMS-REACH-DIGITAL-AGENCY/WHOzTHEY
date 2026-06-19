@@ -6,7 +6,13 @@
 // so the Anthropic API key is NEVER exposed to the browser.
 
 import WHOzTHEY from '../components/WHOzTHEY'
+import WhozTheyUxTweaks from '../components/WhozTheyUxTweaks'
 
 export default function Home() {
-  return <WHOzTHEY />
+  return (
+    <div id="whozthey-shell">
+      <WHOzTHEY />
+      <WhozTheyUxTweaks />
+    </div>
+  )
 }
