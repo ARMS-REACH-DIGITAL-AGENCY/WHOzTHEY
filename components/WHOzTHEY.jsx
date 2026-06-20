@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { SponsorResultPanel, renderSponsorTeaser } from "./SponsorHookPreview";
 import { initializeApp, getApp, getApps } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -964,12 +965,6 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
 }
 
 // ── FUN FACTS + SPONSOR CAROUSEL ─────────────────────────────────────────────
-function renderSponsorTeaser(text) {
-  const match = text.match(/^(They)\b/i);
-  if (!match) return text;
-  return <><span style={{ color:"#dc2626" }}>{match[1]}</span>{text.slice(match[1].length)}</>;
-}
-
 function trackSponsor(type, item, sessionId, firebaseUid) {
   if (!UUID_RE.test(item?.id || "")) return;
   fetch("/api/sponsor-track", {
@@ -1084,39 +1079,6 @@ function FunFactsSection({ onSearch, onSponsorSelect, onBadgeEarned, refreshSign
         </div>
       </div>
     </footer>
-  );
-}
-
-function SponsorResultPanel({ sponsor, onClear }) {
-  if (!sponsor) return null;
-  return (
-    <section style={{ background:"#fff", borderBottom:"3px solid #e2e8f0" }}>
-      <div style={{ background:"#f8fafc", borderBottom:"1px solid #e2e8f0", padding:"20px 24px" }}>
-        <div style={{ maxWidth:"760px", margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"12px" }}>
-          <div>
-            <p style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.1em", textTransform:"uppercase", color:sponsor.accent, margin:"0 0 4px" }}>{sponsor.badge} · {sponsor.sponsor}</p>
-            <h2 style={{ fontFamily:"'Georgia',serif", fontSize:"20px", fontWeight:"700", color:"#0f172a", margin:0, lineHeight:1.3 }}>
-              {renderSponsorTeaser(sponsor.teaser)}
-            </h2>
-          </div>
-          <button onClick={onClear} style={{ background:"none", border:"1px solid #cbd5e1", borderRadius:"4px", color:"#64748b", fontSize:"11px", fontFamily:"system-ui", padding:"3px 10px", cursor:"pointer", flexShrink:0 }}>Close ✕</button>
-        </div>
-      </div>
-      <div style={{ maxWidth:"760px", margin:"0 auto", padding:"24px" }}>
-        <div style={{ background:"#0f172a", borderLeft:`4px solid ${sponsor.accent}`, borderRadius:"10px", padding:"22px", marginBottom:"18px" }}>
-          <p style={{ fontFamily:"'Georgia',serif", fontSize:"18px", color:"#f8fafc", lineHeight:1.6, margin:"0 0 16px" }}>{sponsor.body}</p>
-          <a href={sponsor.ctaUrl} target="_blank" rel="noopener" style={{ display:"inline-block", padding:"11px 18px", background:sponsor.accent, borderRadius:"7px", color:"#fff", textDecoration:"none", fontFamily:"system-ui", fontSize:"13px", fontWeight:"700" }}>
-            {sponsor.cta}
-          </a>
-        </div>
-        <div style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"8px", padding:"16px 18px" }}>
-          <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>Sponsor CTA Landing Area</h3>
-          <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#475569", lineHeight:1.7, margin:0 }}>
-            This is the middle-section sponsor result area. Each sponsor can use it as a pseudo landing page for a message, offer, form link, coupon, lead-generation CTA, or managed ARMS Reach campaign.
-          </p>
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -1661,6 +1623,14 @@ export default function WHOzTHEY() {
     window.history.replaceState(null, "", url.toString());
   }
 
+  async function handleSponsorLeadSubmit(values) {
+    await fetch("/api/sponsor-leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sponsorCardId: selectedSponsor?.id, sessionId, firebaseUid: user?.uid, ...values }),
+    });
+  }
+
   function handleResetFromHeader() {
     setActiveTab("search");
     handleClear();
@@ -1712,7 +1682,7 @@ export default function WHOzTHEY() {
             {selectedSponsor&&!loading&&(
               selectedSponsor.linkMode === "frame" && selectedSponsor.ctaUrl
                 ? <SponsorFramePanel sponsor={selectedSponsor} onClear={handleClear} />
-                : <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} />
+                : <SponsorResultPanel sponsor={selectedSponsor} onClear={handleClear} onLeadSubmit={handleSponsorLeadSubmit} />
             )}
             {answer&&!loading&&!selectedSponsor&&(
               <AnswerPanel query={query} answer={answer} persona={persona} onBadgeEarned={earnBadge} user={user} onLoginRequest={()=>setShowLogin(true)} headerHeight={headerHeight} sessionId={sessionId} showExplainer={isDefault} onStoreClick={handleStoreClick} />

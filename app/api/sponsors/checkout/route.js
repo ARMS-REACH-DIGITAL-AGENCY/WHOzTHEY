@@ -1,80 +1,72 @@
 import { getSql } from '../../../../lib/db'
 import { getStripe } from '../../../../lib/stripeClient'
 import { getSponsorTier } from '../../../../lib/sponsorTiers'
-import { ensureSponsorSignupSchema, generateDashboardToken } from '../../../../lib/sponsorSignup'
+import { ensureSponsorTables } from '../../../../lib/sponsorSchema'
+import { generateDashboardToken } from '../../../../lib/sponsorSignup'
 
 export const dynamic = 'force-dynamic'
 
-async function ensureSponsorTables(sql) {
-  await sql`create extension if not exists pgcrypto`
-
-  await sql`
-    create table if not exists sponsors (
-      id uuid primary key default gen_random_uuid(),
-      sponsor_name text not null,
-      contact_name text,
-      contact_email text,
-      website_url text,
-      cta_url text,
-      status text not null default 'draft',
-      stripe_customer_id text,
-      stripe_subscription_id text,
-      ghl_contact_id text,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
-  `
-
-  await sql`
-    create table if not exists sponsor_cards (
-      id uuid primary key default gen_random_uuid(),
-      sponsor_id uuid references sponsors(id) on delete cascade,
-      teaser text not null,
-      body text,
-      cta_label text,
-      cta_url text,
-      accent_color text,
-      link_mode text not null default 'panel',
-      is_active boolean not null default false,
-      starts_at timestamptz,
-      ends_at timestamptz,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
-  `
+function buildLeadFields(rawLeadFields) {
+  if (!rawLeadFields) return null
+  const fields = Array.isArray(rawLeadFields.fields)
+    ? rawLeadFields.fields.filter((f) => ['name', 'email', 'phone'].includes(f))
+    : []
+  if (!fields.length) return null
+  return { fields, question: (rawLeadFields.question || '').trim() || null }
 }
 
 export async function POST(request) {
   try {
     const body = await request.json()
-    const { tierKey, sponsorName, contactName, contactEmail, claimText, ctaUrl, logoUrl, accentColor } = body
+    const {
+      tierKey,
+      sponsorName,
+      contactName,
+      contactEmail,
+      claimText,
+      revealBody,
+      ctaLabel,
+      ctaUrl,
+      logoUrl,
+      accentColor,
+      leadFields,
+    } = body
 
     const tier = getSponsorTier(tierKey)
     if (!tier) {
       return Response.json({ ok: false, error: 'Unknown sponsorship tier.' }, { status: 400 })
     }
-    if (!sponsorName || !contactEmail || !claimText || !ctaUrl) {
+    if (!sponsorName || !contactEmail || !claimText) {
       return Response.json(
-        { ok: false, error: 'sponsorName, contactEmail, claimText, and ctaUrl are required.' },
+        { ok: false, error: 'sponsorName, contactEmail, and claimText are required.' },
         { status: 400 }
       )
+    }
+    if (tier.key !== 'leads' && !ctaUrl) {
+      return Response.json({ ok: false, error: 'ctaUrl is required for this tier.' }, { status: 400 })
     }
 
     const sql = getSql()
     await ensureSponsorTables(sql)
-    await ensureSponsorSignupSchema(sql)
 
     const dashboardToken = generateDashboardToken()
+    const normalizedLeadFields = tier.leadCapture ? buildLeadFields(leadFields) : null
 
     const [sponsor] = await sql`
       insert into sponsors (sponsor_name, contact_name, contact_email, website_url, cta_url, status, tier, dashboard_token)
-      values (${sponsorName}, ${contactName || null}, ${contactEmail}, ${ctaUrl}, ${ctaUrl}, 'pending_payment', ${tier.key}, ${dashboardToken})
+      values (${sponsorName}, ${contactName || null}, ${contactEmail}, ${ctaUrl || null}, ${ctaUrl || null}, 'pending_payment', ${tier.key}, ${dashboardToken})
       returning id
     `
 
     const [card] = await sql`
-      insert into sponsor_cards (sponsor_id, teaser, body, cta_label, cta_url, accent_color, link_mode, is_active)
-      values (${sponsor.id}, ${claimText}, ${logoUrl ? `Logo: ${logoUrl}` : null}, 'Learn More →', ${ctaUrl}, ${accentColor || '#dc2626'}, ${tier.defaultLinkMode}, false)
+      insert into sponsor_cards (
+        sponsor_id, teaser, body, cta_label, cta_url, logo_url, accent_color, link_mode, lead_fields, is_active
+      )
+      values (
+        ${sponsor.id}, ${claimText}, ${revealBody || null}, ${ctaLabel || 'Learn More →'}, ${ctaUrl || null},
+        ${logoUrl || null}, ${accentColor || '#dc2626'}, ${tier.defaultLinkMode},
+        ${normalizedLeadFields ? JSON.stringify(normalizedLeadFields) : null}::jsonb, false
+      )
       returning id
     `
 
