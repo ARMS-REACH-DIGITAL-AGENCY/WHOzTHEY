@@ -33,7 +33,7 @@ const FALLBACK_SPONSOR_CARDS = [
     teaser: 'They are giving golfers $75 ShipSticks Vouchers!',
     body: 'Travel Protection Club by Benefit Buddies helps golfers protect trips, shipments, and travel plans with real savings and added peace of mind.',
     cta: 'Claim Your Voucher',
-    ctaUrl: 'https://armsreach-global360.manus.space/',
+    ctaUrl: 'https://www.armsreachdigital.agency',
     accent: '#0284c7',
   },
   {
