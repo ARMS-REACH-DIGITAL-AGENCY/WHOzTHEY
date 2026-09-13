@@ -471,22 +471,25 @@ function BadgeToast({ badge, onDone }) {
 }
 
 // ── SHARE / SETTLE THE ARGUMENT BUTTON ───────────────────────────────────────
-function buildShareUrl(claim, claimId) {
+function buildShareUrl(claim, shortCode) {
   if (typeof window === "undefined") return "https://whozthey.com";
-  if (claimId) return `${window.location.origin}/c/${claimId}`;
+  if (shortCode) return `${window.location.origin}/c/${shortCode}`;
   const url = new URL(window.location.origin + "/");
   url.searchParams.set("q", claim);
   return url.toString();
 }
 
-function ShareButton({ query, verdict, claimId, onBadgeEarned }) {
+function ShareButton({ query, verdict, shortCode, onBadgeEarned }) {
   const [copied, setCopied] = useState(false);
   function share() {
-    const shareUrl = buildShareUrl(query, claimId);
-    const text = `They say "${query}" — WHOzTHEY? verdict: ${verdict}. Settle the argument 👉 ${shareUrl}`;
+    const shareUrl = buildShareUrl(query, shortCode);
+    // Don't fold shareUrl into `text` — navigator.share targets (Messages,
+    // Facebook, etc.) append `url` to the shared text themselves, so doing
+    // both prints the link twice.
+    const text = `They say "${query}" — WHOzTHEY? verdict: ${verdict}. Settle the argument 👉`;
     onBadgeEarned?.("settle_it");
     if (navigator.share) { navigator.share({ title:"WHOzTHEY?", text, url:shareUrl }).catch(()=>{}); }
-    else { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(()=>setCopied(false),2000); }
+    else { navigator.clipboard?.writeText(`${text} ${shareUrl}`); setCopied(true); setTimeout(()=>setCopied(false),2000); }
   }
   return (
     <div style={{ background:"#0f172a", borderRadius:"8px", padding:"16px", textAlign:"center" }}>
@@ -883,7 +886,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#64748b", margin:"0 0 8px" }}>How It Started</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"14px", color:"#1e293b", lineHeight:"1.75", margin:0 }}>{answer.origin}</p>
             </div>
-            <ShareButton query={query} verdict={verdictText} claimId={answer.tracking?.claimId} onBadgeEarned={onBadgeEarned} />
+            <ShareButton query={query} verdict={verdictText} shortCode={answer.tracking?.shortCode} onBadgeEarned={onBadgeEarned} />
           </>
         )}
 
@@ -905,7 +908,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
                 <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#14532d", lineHeight:"1.65", margin:0 }}>{answer.commonGround}</p>
               </div>
             )}
-            <ShareButton query={query} verdict={verdictText} claimId={answer.tracking?.claimId} onBadgeEarned={onBadgeEarned} />
+            <ShareButton query={query} verdict={verdictText} shortCode={answer.tracking?.shortCode} onBadgeEarned={onBadgeEarned} />
           </>
         )}
 
@@ -919,7 +922,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
               <h3 style={{ fontFamily:"system-ui", fontSize:"10px", fontWeight:"700", letterSpacing:"0.12em", textTransform:"uppercase", color:"#d97706", margin:"0 0 6px" }}>★ They Also Say…</h3>
               <p style={{ fontFamily:"system-ui", fontSize:"13px", color:"#92400e", lineHeight:"1.7", margin:0 }}>{answer.funFact}</p>
             </div>
-            <ShareButton query={query} verdict={verdictText} claimId={answer.tracking?.claimId} onBadgeEarned={onBadgeEarned} />
+            <ShareButton query={query} verdict={verdictText} shortCode={answer.tracking?.shortCode} onBadgeEarned={onBadgeEarned} />
           </>
         )}
 
@@ -927,7 +930,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
           <>
             <DebatePanel query={query} persona={persona} onBadgeEarned={onBadgeEarned} sessionId={sessionId} user={user} />
             <div style={{ marginTop:"20px" }}>
-              <ShareButton query={query} verdict={verdictText} claimId={answer.tracking?.claimId} onBadgeEarned={onBadgeEarned} />
+              <ShareButton query={query} verdict={verdictText} shortCode={answer.tracking?.shortCode} onBadgeEarned={onBadgeEarned} />
             </div>
           </>
         )}
@@ -936,7 +939,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
           <>
             <CommentsSection claim={query} user={user} sessionId={sessionId} onLoginRequest={onLoginRequest} />
             <div style={{ marginTop:"4px" }}>
-              <ShareButton query={query} verdict={verdictText} claimId={answer.tracking?.claimId} onBadgeEarned={onBadgeEarned} />
+              <ShareButton query={query} verdict={verdictText} shortCode={answer.tracking?.shortCode} onBadgeEarned={onBadgeEarned} />
             </div>
           </>
         )}
@@ -951,7 +954,7 @@ function AnswerPanel({ query, answer, persona, onBadgeEarned, user, onLoginReque
                 </ul>
               </div>
             )}
-            <ShareButton query={query} verdict={verdictText} claimId={answer.tracking?.claimId} onBadgeEarned={onBadgeEarned} />
+            <ShareButton query={query} verdict={verdictText} shortCode={answer.tracking?.shortCode} onBadgeEarned={onBadgeEarned} />
             <div style={{ textAlign:"center", padding:"16px 0 4px", borderTop:"1px solid #f1f5f9", marginTop:"20px" }}>
               <p style={{ fontFamily:"'Georgia',serif", fontSize:"13px", color:"#94a3b8", fontStyle:"italic", margin:0 }}>
                 "WHOzTHEY? doesn't tell you what to think. We just find out who said it first."

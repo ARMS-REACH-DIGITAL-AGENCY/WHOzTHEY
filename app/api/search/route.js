@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { neon } from '@neondatabase/serverless'
+import { generateShortCode, ensureClaimShortCodeColumn } from '../../../lib/db'
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -58,10 +59,12 @@ function getClientIpHashSource(request) {
 
 async function logSearchToNeon({ request, claim, parsed, sessionId, firebaseUid }) {
   const sql = getSql()
+  await ensureClaimShortCodeColumn(sql)
   const normalizedClaim = normalizeClaim(claim)
   const displayClaim = claim.trim()
   const userAgent = request.headers.get('user-agent') || null
   const ipHash = getClientIpHashSource(request)
+  const shortCode = generateShortCode()
 
   const claimRows = await sql`
     insert into claims (
@@ -69,24 +72,28 @@ async function logSearchToNeon({ request, claim, parsed, sessionId, firebaseUid 
       display_claim,
       search_count,
       first_searched_at,
-      last_searched_at
+      last_searched_at,
+      short_code
     )
     values (
       ${normalizedClaim},
       ${displayClaim},
       1,
       now(),
-      now()
+      now(),
+      ${shortCode}
     )
     on conflict (normalized_claim)
     do update set
       search_count = claims.search_count + 1,
       last_searched_at = now(),
-      updated_at = now()
-    returning id
+      updated_at = now(),
+      short_code = coalesce(claims.short_code, excluded.short_code)
+    returning id, short_code
   `
 
   const claimId = claimRows[0]?.id
+  const claimShortCode = claimRows[0]?.short_code
 
   if (!claimId) {
     throw new Error('Unable to create or find claim record.')
@@ -124,6 +131,7 @@ async function logSearchToNeon({ request, claim, parsed, sessionId, firebaseUid 
 
   return {
     claimId,
+    shortCode: claimShortCode,
     searchId: searchRows[0]?.id || null,
   }
 }
