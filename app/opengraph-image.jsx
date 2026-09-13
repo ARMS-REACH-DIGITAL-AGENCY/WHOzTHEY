@@ -20,7 +20,7 @@ export default async function Image() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+          background: '#0f172a',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
