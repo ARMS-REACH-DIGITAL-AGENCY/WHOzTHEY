@@ -4,6 +4,7 @@ const inter = Inter({ subsets: ['latin'] })
 const anton = Anton({ subsets: ['latin'], weight: '400', variable: '--font-anton' })
 
 export const metadata = {
+  metadataBase: new URL('https://whozthey.com'),
   title: 'WHOzTHEY? — Tracing the Origin of Everything "They" Ever Said',
   description: 'You\'ve heard it. Now find out where it really came from. WHOzTHEY? researches the true origin of folk sayings, old wives\' tales, and "They say..." claims.',
   keywords: 'they say, folk sayings, myth busting, old wives tales, fact check, origin of sayings, who said it',
